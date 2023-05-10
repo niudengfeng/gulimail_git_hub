@@ -1,0 +1,194 @@
+#查询语句
+#搜索规则：
+#1.现根据skuTitle模糊搜索
+#2.根据catalogId过滤
+#3.品牌多选
+#4.属性多选
+#5.价格范围查询
+#6.是否有库存
+#分组逻辑
+#1.根据品牌ID分组，显示品牌名称，图片
+#2.根据分类ID分组，显示分类名称
+#3.属性ID分组,显示属性名称和属性值
+#排序
+#1.价格，销量，评分的升序降序
+#分页和高亮
+
+
+GET /product/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "skuTitle": "apple"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "term": {
+            "catalogId": 225
+          }
+        },
+        {
+          "terms": {
+            "brandId": [
+              "1",
+              "2",
+              "3",
+              "4",
+              "5"
+            ]
+          }
+        },
+        {
+          "nested": {
+            "path": "attrs",
+            "query": {
+              "bool": {
+                "must": [
+                  {
+                    "term": {
+                      "attrs.attrId": {
+                        "value": "4"
+                      }
+                    }
+                  },
+                  {
+                    "terms": {
+                      "attrs.attrValue": [
+                        "16G",
+                        "8G",
+                        "4G"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "nested": {
+            "path": "attrs",
+            "query": {
+              "bool": {
+                "must": [
+                  {
+                    "term": {
+                      "attrs.attrId": {
+                        "value": "5"
+                      }
+                    }
+                  },
+                  {
+                    "terms": {
+                      "attrs.attrValue": [
+                        "64gb",
+                        "128gb",
+                        "512gb",
+                        "1t"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "term": {
+            "hasStock": false
+          }
+        },
+        {
+          "range": {
+            "skuPrice": {
+              "gte": 0,
+              "lte": 100000
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "brandId_aggs": {
+      "terms": {
+        "field": "brandId",
+        "size": 100
+      },
+      "aggs": {
+        "brandName_aggs": {
+          "terms": {
+            "field": "brandName",
+            "size": 100
+          }
+        },
+        "brandImg_aggs": {
+          "terms": {
+            "field": "brandImg",
+            "size": 100
+          }
+        }
+      }
+    },
+    "catalogId_aggs": {
+      "terms": {
+        "field": "catalogId",
+        "size": 100
+      },
+      "aggs": {
+        "catalogName_aggs": {
+          "terms": {
+            "field": "catalogName",
+            "size": 100
+          }
+        }
+      }
+    },
+    "attr_aggs":{
+      "nested": {
+        "path": "attrs"
+      },
+      "aggs": {
+        "attrId_aggs": {
+          "terms": {
+            "field": "attrs.attrId",
+            "size": 100
+          },
+          "aggs": {
+            "attrName_aggs": {
+              "terms": {
+                "field": "attrs.attrName",
+                "size": 100
+              }
+            },
+             "attrValue_aggs": {
+              "terms": {
+                "field": "attrs.attrValue",
+                "size": 100
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "sort": [
+    {
+      "skuPrice": {
+        "order": "desc"
+      }
+    }
+  ],
+  "from": 0,
+  "size": 20,
+  "highlight": {
+    "fields": {"skuTitle": {}},
+    "pre_tags": "<b style='color:red'>",
+    "post_tags": "</b>"
+  }
+}

@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: gulimail-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: product-route
+          uri: lb://gulimail-product
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - RewritePath=/api/product/?(?<segment>.*), /product/$\{segment}
+
+        - id: coupon-route
+          uri: lb://gulimail-coupon
+          predicates:
+            - Path=/api/coupon/**
+          filters:
+            - RewritePath=/api/coupon/?(?<segment>.*), /coupon/$\{segment}
+
+        - id: member-route
+          uri: lb://gulimail-member
+          predicates:
+            - Path=/api/member/**
+          filters:
+            - RewritePath=/api/member/?(?<segment>.*), /member/$\{segment}
+
+        - id: search-route
+          uri: lb://gulimail-search
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - RewritePath=/api/search/?(?<segment>.*), /search/$\{segment}
+
+        - id: third-route
+          uri: lb://gulimail-third
+          predicates:
+            - Path=/api/thirdparty/**
+          filters:
+            - RewritePath=/api/thirdparty/?(?<segment>.*), /$\{segment}
+
+        - id: ware-route
+          uri: lb://gulimail-ware
+          predicates:
+            - Path=/api/ware/**
+          filters:
+            - RewritePath=/api/ware/?(?<segment>.*), /ware/$\{segment}
+
+        - id: order-route
+          uri: lb://gulimail-order
+          predicates:
+            - Path=/api/order/**
+          filters:
+            - RewritePath=/api/order/?(?<segment>.*), /order/$\{segment}
+
+        - id: amdin-route
+          uri: lb://renren-fast
+          predicates:
+            - Path=/api/**
+          filters:
+            - RewritePath=/api/?(?<segment>.*), /renren-fast/$\{segment}
+
+
+        - id: product-thmleaf-route
+          uri: lb://gulimail-product
+          predicates:
+            - Host=gulimail.com
+
+        - id: search-thmleaf-route
+          uri: lb://gulimail-search
+          predicates:
+            - Host=search.gulimail.com
+
