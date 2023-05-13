@@ -27,6 +27,7 @@ import com.atguigu.common.utils.Query;
 
 import com.atguigu.gulimail.product.dao.SpuInfoDao;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 
@@ -172,14 +173,19 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 List<Images> skuImages = sku.getImages();
                 if (skuImages!=null && skuImages.size()>0){
                     List<SkuImagesEntity> collect = skuImages.stream().map(skuImage -> {
-                        SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
-                        skuImagesEntity.setSkuId(skuId);
-                        skuImagesEntity.setDefaultImg(skuImage.getDefaultImg());
-                        skuImagesEntity.setImgUrl(skuImage.getImgUrl());
-                        return skuImagesEntity;
-                    }).collect(Collectors.toList());
-                    skuImagesService.saveBatch(collect);
-                    log.info("批量保存sku的图片信息===============》pms_sku_images"+collect);
+                        if (skuImage.getDefaultImg()==1){
+                            SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
+                            skuImagesEntity.setSkuId(skuId);
+                            skuImagesEntity.setDefaultImg(skuImage.getDefaultImg());
+                            skuImagesEntity.setImgUrl(skuImage.getImgUrl());
+                            return skuImagesEntity;
+                        }
+                        return null;
+                    }).filter(f->f!=null).collect(Collectors.toList());
+                    if (!CollectionUtils.isEmpty(collect)){
+                        skuImagesService.saveBatch(collect);
+                        log.info("批量保存sku的图片信息===============》pms_sku_images"+collect);
+                    }
                 }
                 //c.sku的销售属性信息pms_sku_sale_attr_value
                 List<Attr> attr = sku.getAttr();

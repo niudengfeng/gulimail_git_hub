@@ -14,5 +14,19 @@
         <result property="quickShow" column="quick_show"/>
     </resultMap>
 
+    <select id="attrGroupVos" parameterType="long" resultType="com.atguigu.gulimail.product.vo.SpuAttrVo">
+        SELECT
+            pv.attr_id,
+            pv.attr_name,
+            pv.attr_value,
+            pg.attr_group_id,
+            pg.attr_group_name
+        FROM
+            `pms_product_attr_value` pv
+                LEFT JOIN pms_attr_attrgroup_relation pr ON pr.attr_id = pv.attr_id
+                LEFT JOIN pms_attr_group pg ON pg.attr_group_id = pr.attr_group_id
+        WHERE
+            pv.spu_id = #{spuId}
+    </select>
 
 </mapper>

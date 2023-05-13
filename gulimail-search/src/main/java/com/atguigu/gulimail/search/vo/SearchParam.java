@@ -11,6 +11,8 @@ import java.util.List;
 @Data
 public class SearchParam extends PageParam {
 
+    private String queryString;//请求URL
+
     //三级分类ID
     private Long catalog3Id;
 

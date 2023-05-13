@@ -3,7 +3,9 @@ package com.atguigu.gulimail.search.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.common.dto.SkuEsModel;
 import com.atguigu.common.utils.EsConstants;
+import com.atguigu.common.utils.R;
 import com.atguigu.gulimail.search.service.MailSearchService;
+import com.atguigu.gulimail.search.service.feign.ProdcutFeign;
 import com.atguigu.gulimail.search.vo.SearchParam;
 import com.atguigu.gulimail.search.vo.SearchResultResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -24,6 +27,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,9 +35,13 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +50,8 @@ public class MailSearchServiceImpl implements MailSearchService {
 
     @Autowired
     private RestHighLevelClient client;
+    @Autowired
+    private ProdcutFeign prodcutFeign;
 
     /**
      * 执行search.gulimail.com首页搜索功能
@@ -60,8 +70,9 @@ public class MailSearchServiceImpl implements MailSearchService {
             log.info("得到查询结果："+response.toString());
             //3.分析响应结果，封装成SearchResultResponse
             searchResultResponse = builderResponse(response,searchParam);
-        } catch (IOException e) {
-            log.error("查询ES报错",e.getMessage());
+        } catch (Exception e) {
+            log.error("查询ES报错",e.getCause());
+            e.printStackTrace();
         }finally {
             return searchResultResponse;
         }
@@ -98,15 +109,17 @@ public class MailSearchServiceImpl implements MailSearchService {
         }
         /**TODO skuPrice范围搜索 格式x_x */
         if (! StringUtils.isEmpty(searchParam.getSkuPrice())){
-            String[] s = searchParam.getSkuPrice().split("_");
-            String min = s[0];
-            String max = s[1];
+            String[] s = searchParam.getSkuPrice().trim().split("_");
+            List<String> collect = Arrays.stream(s).filter(f -> !StringUtils.isEmpty(f)).collect(Collectors.toList());
             RangeQueryBuilder skuPrice = QueryBuilders.rangeQuery("skuPrice");
-            if (!StringUtils.isEmpty(min)){
-                skuPrice.gte(new BigDecimal(min));
-            }
-            if (!StringUtils.isEmpty(max)){
-                skuPrice.lte(new BigDecimal(max));
+            if (collect.size()==2){
+                skuPrice.gte(new BigDecimal(collect.get(0))).lte(new BigDecimal(collect.get(1)));
+            }else if (collect.size()==1){
+                if (searchParam.getSkuPrice().startsWith("_")) {
+                    skuPrice.lte(new BigDecimal(collect.get(0)));
+                }else{
+                    skuPrice.gte(new BigDecimal(collect.get(0)));
+                }
             }
             boolQueryBuilder.filter(skuPrice);
         }
@@ -198,13 +211,23 @@ public class MailSearchServiceImpl implements MailSearchService {
             //得到attrId
             attrVo.setAttrId(Long.valueOf(attrId));
             //獲取attrName 一個ID只會對應一個name
-            ParsedStringTerms attrNameAggs = bucket.getAggregations().get("attrName_aggs");
-            String keyAsString = attrNameAggs.getBuckets().get(0).getKeyAsString();
-            attrVo.setAttrName(keyAsString);
+            try {
+                ParsedStringTerms attrNameAggs = bucket.getAggregations().get("attrName_aggs");
+                String keyAsString = attrNameAggs.getBuckets().get(0).getKeyAsString();
+                attrVo.setAttrName(keyAsString);
+            } catch (Exception e) {
+                attrVo.setAttrName("");
+                log.error("该属性下没有对应名称");
+            }
             //獲取attrValue 一对多
-            ParsedStringTerms attrValueAggs = bucket.getAggregations().get("attrValue_aggs");
-            attrVo.setAttrValue(attrValueAggs.getBuckets().stream().map(m->m.getKeyAsString()).collect(Collectors.toList()));
-            attrVos.add(attrVo);
+            try {
+                ParsedStringTerms attrValueAggs = bucket.getAggregations().get("attrValue_aggs");
+                attrVo.setAttrValue(attrValueAggs.getBuckets().stream().map(m->m.getKeyAsString()).collect(Collectors.toList()));
+                attrVos.add(attrVo);
+            } catch (Exception e) {
+                log.error("该属性下没有对应属性");
+                attrVos.add(attrVo);
+            }
         }
         resultResponse.setAttrs(attrVos);
 
@@ -213,12 +236,17 @@ public class MailSearchServiceImpl implements MailSearchService {
         ParsedLongTerms catalogIds = aggregations.get("catalogId_aggs");
         for (Terms.Bucket bucket : catalogIds.getBuckets()) {
             SearchResultResponse.CategoryVo categoryVo = new SearchResultResponse.CategoryVo();
-            Long aLong = Long.valueOf(bucket.getKeyAsString());
-            categoryVo.setCatalogId(aLong);
-            ParsedStringTerms a = bucket.getAggregations().get("catalogName_aggs");
-            String keyAsString = a.getBuckets().get(0).getKeyAsString();//一个分类ID只会对应一个分类名称
-            categoryVo.setCatalogName(keyAsString);
-            categoryVos.add(categoryVo);
+            try {
+                Long aLong = Long.valueOf(bucket.getKeyAsString());
+                categoryVo.setCatalogId(aLong);
+                ParsedStringTerms a = bucket.getAggregations().get("catalogName_aggs");
+                String keyAsString = a.getBuckets().get(0).getKeyAsString();//一个分类ID只会对应一个分类名称
+                categoryVo.setCatalogName(keyAsString);
+                categoryVos.add(categoryVo);
+            } catch (Exception e) {
+                categoryVos.add(categoryVo);
+                log.error("该分类下没有数据");
+            }
         }
         resultResponse.setCategorys(categoryVos);
 
@@ -243,8 +271,17 @@ public class MailSearchServiceImpl implements MailSearchService {
         List<SkuEsModel> products = new ArrayList<>();
         SearchHit[] hits = response.getHits().getHits();
         for (SearchHit hit : hits) {
-            SkuEsModel skuEsModel = JSON.parseObject(hit.getSourceAsString(), SkuEsModel.class);
-            products.add(skuEsModel);
+            try {
+                SkuEsModel skuEsModel = JSON.parseObject(hit.getSourceAsString(), SkuEsModel.class);
+                if (! StringUtils.isEmpty(searchParam.getKeyword())){
+                    HighlightField skuTitle = hit.getHighlightFields().get("skuTitle");
+                    Text[] fragments = skuTitle.getFragments();
+                    skuEsModel.setSkuTitle(fragments[0].string());
+                }
+                products.add(skuEsModel);
+            } catch (Exception e) {
+                log.error("商品数据有问题"+e.getMessage());
+            }
         }
         resultResponse.setProducts(products);
 
@@ -258,7 +295,51 @@ public class MailSearchServiceImpl implements MailSearchService {
 
         //7.返回当前页
         resultResponse.setPageNum(searchParam.getPageNum());
+
+        //8.返回页码
+        List<Integer> navs = new ArrayList<>();
+        for (int j = 1; j <= resultResponse.getTotalPages() ; j++) {
+            navs.add(j);
+        }
+        resultResponse.setNavs(navs);
+        //9.返回面包屑导航
+        if (!CollectionUtils.isEmpty(searchParam.getAttrs())){
+            List<String> attrs = searchParam.getAttrs();
+            List<SearchResultResponse.NavVo> collect = attrs.stream().map(m -> {
+                if (StringUtils.isEmpty(m) || m.endsWith("_") || m.split("_").length<2 || StringUtils.isEmpty(m.split("_")[0])){
+                    return null;
+                }
+                SearchResultResponse.NavVo navVo = new SearchResultResponse.NavVo();
+                String[] s = m.split("_");
+                Long attrId = Long.valueOf(s[0].toString());
+                navVo.setAttrId(attrId);
+                //根据attrId去prodcut 查询attrName
+                R info = prodcutFeign.info(attrId);
+                if (info!=null && info.getCode().intValue() == 0){
+                    Map<String, Object> attr = (Map<String, Object>) info.get("attr");
+                    navVo.setAttrName(String.valueOf(attr.get("attrName")));
+                }else {
+                    navVo.setAttrName(s[0]);
+                }
+                String attrValues = s[1];
+                navVo.setAttrValue(attrValues);
+
+                String queryString = searchParam.getQueryString();
+                String attrUrl = attrId + "_" + attrValues;
+                String encode="";
+                try {
+                    encode = URLEncoder.encode(attrUrl, "UTF-8");
+                    encode = encode.replace("+","%20");//浏览器空格替换
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+                String replace = queryString.replace("&attrs="+encode, "");
+                queryString = "http://search.gulimail.com/list.html?"+ replace;
+                navVo.setBackUrl(queryString);
+                return navVo;
+            }).collect(Collectors.toList());
+            resultResponse.setNavos(collect);
+        }
         return resultResponse;
     }
-
 }

@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.servlet.http.HttpServletRequest;
+
 @Controller
 @Api(tags = "ES查询")
 public class IndexController {
@@ -23,9 +25,11 @@ public class IndexController {
      * 商品的检索查询接口
      * @return
      */
-    @PostMapping({"/list.html"})
+    @GetMapping({"/list.html"})
     @ApiOperation("ES查询")
-    public String index(@RequestBody SearchParam searchParam, Model model){
+    public String index(SearchParam searchParam, Model model, HttpServletRequest request){
+        String queryString = request.getQueryString();//获取请求URL
+        searchParam.setQueryString(queryString);
         SearchResultResponse result = searchService.searchEs(searchParam);
         model.addAttribute("result",result);
         return "list";

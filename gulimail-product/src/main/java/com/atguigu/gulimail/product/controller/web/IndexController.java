@@ -30,6 +30,18 @@ public class IndexController {
         return R.ok().put("catalog",categoryService.categoryLevelThree());
     }
 
+    @GetMapping("/yhxy")
+    public String getYhxy(){
+        return "yhxy";
+    }
 
+    /**
+     * 隐私协议-游历星河-盛阳伍月
+     * @return
+     */
+    @GetMapping("/yszc")
+    public String getYszc(){
+        return "yszc";
+    }
 
 }

@@ -64,7 +64,7 @@ spring:
         - id: product-thmleaf-route
           uri: lb://gulimail-product
           predicates:
-            - Host=gulimail.com
+            - Host=gulimail.com,item.gulimail.com
 
         - id: search-thmleaf-route
           uri: lb://gulimail-search

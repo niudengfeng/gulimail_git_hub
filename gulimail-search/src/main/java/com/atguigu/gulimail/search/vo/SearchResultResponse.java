@@ -28,6 +28,9 @@ public class SearchResultResponse extends PageResult {
         private String brandImg;
     }
 
+    //页码集合
+    private List<Integer> navs;
+
     @Data
     public static class AttrVo{
         private Long attrId;
@@ -39,5 +42,16 @@ public class SearchResultResponse extends PageResult {
     public static class CategoryVo{
         private Long catalogId;
         private String catalogName;
+    }
+
+    //面包屑导航集合
+    private List<NavVo> navos;
+
+    @Data
+    public static class NavVo{
+        private Long attrId;
+        private String attrName;
+        private String attrValue;
+        private String backUrl;//去除属性条件后应该回退到的链接URL
     }
 }
