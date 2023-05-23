@@ -23,13 +23,6 @@ public class SkuItemVo {
     private boolean hasStock = true;
 
     @Data
-    public static class SpuSalesVo{
-        private Long attrId;
-        private String attrName;
-        private String attrValue;
-    }
-
-    @Data
     public static class SpuAttrGroupVo{
         private String groupName;
         private List<SpuAttrVo> attrBaseVos;

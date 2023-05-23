@@ -28,7 +28,7 @@ public class ExceptionController {
 
     @ExceptionHandler(value = Exception.class)
     public R handleException(Exception e){
-        log.error("未知异常",e.getClass());
+        log.error("未知异常",e);
         return R.error(BusinessCode.ERROR.getCode(),BusinessCode.ERROR.getMessage());
     }
 

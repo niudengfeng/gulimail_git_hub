@@ -27,6 +27,11 @@
         <result property="accessToken" column="access_token"/>
         <result property="expiresIn" column="expires_in"/>
     </resultMap>
-
+    <select id="checkPhoneExist" resultType="java.lang.Integer">
+        select count(1) from ums_member where mobile = #{phone}
+    </select>
+    <select id="checkUserNameExist" resultType="java.lang.Integer">
+        select count(1) from ums_member where username = #{userName}
+    </select>
 
 </mapper>

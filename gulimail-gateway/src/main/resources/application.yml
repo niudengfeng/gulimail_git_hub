@@ -71,3 +71,8 @@ spring:
           predicates:
             - Host=search.gulimail.com
 
+        - id: auth-thmleaf-route
+          uri: lb://gulimail-auth
+          predicates:
+            - Host=auth.gulimail.com
+

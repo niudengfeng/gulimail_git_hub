@@ -110,6 +110,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             log.info("保存spu图片描述===============》pms_spu_info_desc"+spuInfoDescEntity);
         }
         //3.保存spu的图片集：pms_spu_images
+        String spuDefaultImg = "";
         List<String> imagesList = spuInfoBean.getImages();
         if (imagesList!=null && imagesList.size()>0){
             List<SpuImagesEntity> spuImages = imagesList.stream().map(image -> {
@@ -119,6 +120,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 return images;
             }).filter(f->!StringUtils.isEmpty(f.getImgUrl())).collect(Collectors.toList());
             spuImagesService.saveBatch(spuImages);
+            spuDefaultImg = spuImages.get(0).getImgUrl();//假如sku没有勾选默认图片，则随机取一张SPU的图片
             log.info("批量保存spu图片集===============》pms_spu_images"+spuImages);
         }
         //4.保存spu的规格参数：pms_product_attr_value
@@ -173,14 +175,11 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 List<Images> skuImages = sku.getImages();
                 if (skuImages!=null && skuImages.size()>0){
                     List<SkuImagesEntity> collect = skuImages.stream().map(skuImage -> {
-                        if (skuImage.getDefaultImg()==1){
-                            SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
-                            skuImagesEntity.setSkuId(skuId);
-                            skuImagesEntity.setDefaultImg(skuImage.getDefaultImg());
-                            skuImagesEntity.setImgUrl(skuImage.getImgUrl());
-                            return skuImagesEntity;
-                        }
-                        return null;
+                        SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
+                        skuImagesEntity.setSkuId(skuId);
+                        skuImagesEntity.setDefaultImg(skuImage.getDefaultImg());
+                        skuImagesEntity.setImgUrl(StringUtils.isEmpty(skuImage.getImgUrl())?skuImage.getImgUrl():skuImage.getImgUrl());
+                        return skuImagesEntity;
                     }).filter(f->f!=null).collect(Collectors.toList());
                     if (!CollectionUtils.isEmpty(collect)){
                         skuImagesService.saveBatch(collect);

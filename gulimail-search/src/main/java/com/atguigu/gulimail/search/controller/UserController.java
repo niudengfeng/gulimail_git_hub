@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.search.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimail.search.entity.User;
 import com.atguigu.gulimail.search.service.UserService;

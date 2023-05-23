@@ -1,6 +1,7 @@
 package com.atguigu.gulimail.product.service.impl;
 
 import com.atguigu.gulimail.product.vo.SkuItemVo;
+import com.atguigu.gulimail.product.vo.SpuSalesVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,7 @@ public class SkuSaleAttrValueServiceImpl extends ServiceImpl<SkuSaleAttrValueDao
     }
 
     @Override
-    public List<SkuItemVo.SpuSalesVo> listSalesVo(Long spuId) {
+    public List<SpuSalesVo> listSalesVo(Long spuId) {
         return dao.listSalesVo(spuId);
     }
 

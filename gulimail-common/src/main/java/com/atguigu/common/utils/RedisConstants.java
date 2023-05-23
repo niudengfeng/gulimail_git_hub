@@ -1,6 +1,9 @@
 package com.atguigu.common.utils;
 
 public class RedisConstants {
-    public static final String CATEGORY_ONE_KEY = "CATEGORY:ONE";
-    public static final String CATEGORY_THREE_KEY = "CATEGORY:THREE";
+
+    //短信验证码的redis前缀
+    public static final String SMS_CODE_PREFIX = "SMS:CODE:";
+
+
 }

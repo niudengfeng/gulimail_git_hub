@@ -25,7 +25,7 @@ public class OssController {
     private String accessKey;
     @Value("${spring.cloud.alicloud.oss.endpoint}")
     private String endpoint;
-    @Value("${alibaba.cloud.bucket}")
+    @Value("${spring.cloud.alicloud.oss.bucket}")
     private String bucket;
 
     @RequestMapping("/oss/policy")

@@ -3,7 +3,7 @@
 
 <mapper namespace="com.atguigu.gulimail.product.dao.SkuSaleAttrValueDao">
 
-	<!-- 可根据自己的需求，是否要使用 -->
+    <!-- 可根据自己的需求，是否要使用 -->
     <resultMap type="com.atguigu.gulimail.product.entity.SkuSaleAttrValueEntity" id="skuSaleAttrValueMap">
         <result property="id" column="id"/>
         <result property="skuId" column="sku_id"/>
@@ -14,4 +14,35 @@
     </resultMap>
 
 
+    <resultMap id="SpuSalesVoMap" type="com.atguigu.gulimail.product.vo.SpuSalesVo">
+        <result property="attrId" column="attr_id"></result>
+        <result property="attrName" column="attr_name"></result>
+        <collection property="valueSkuIdVos" ofType="com.atguigu.gulimail.product.vo.AttrValueSkuIdVo">
+            <result column="attr_value" property="attrValue"></result>
+            <result column="sku_ids" property="skuIds"></result>
+        </collection>
+    </resultMap>
+
+    <select id="listSalesVo" parameterType="long" resultMap="SpuSalesVoMap">
+        SELECT
+            pv.attr_id,
+            pv.attr_name,
+            pv.attr_value,
+            GROUP_CONCAT(DISTINCT pv.sku_id) as sku_ids
+        FROM
+            `pms_sku_sale_attr_value` pv
+        WHERE
+                pv.sku_id IN (
+                SELECT
+                    pi.sku_id
+                FROM
+                    pms_sku_info pi
+                WHERE
+                    pi.spu_id = #{spuId}
+            )
+        GROUP BY
+            pv.attr_id,
+            pv.attr_name,
+            pv.attr_value
+    </select>
 </mapper>
