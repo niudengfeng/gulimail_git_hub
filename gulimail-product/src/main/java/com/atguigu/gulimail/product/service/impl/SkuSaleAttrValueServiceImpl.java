@@ -39,4 +39,9 @@ public class SkuSaleAttrValueServiceImpl extends ServiceImpl<SkuSaleAttrValueDao
         return dao.listSalesVo(spuId);
     }
 
+    @Override
+    public List<String> getListForCart(Long skuId) {
+        return dao.getListForCart(skuId);
+    }
+
 }

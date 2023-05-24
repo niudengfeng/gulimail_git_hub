@@ -45,4 +45,7 @@
             pv.attr_name,
             pv.attr_value
     </select>
+    <select id="getListForCart" resultType="java.lang.String">
+        SELECT CONCAT(attr_name,':',attr_value) FROM `pms_sku_sale_attr_value` WHERE sku_id=#{skuId}
+    </select>
 </mapper>

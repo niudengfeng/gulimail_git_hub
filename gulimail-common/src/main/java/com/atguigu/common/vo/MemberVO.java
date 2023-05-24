@@ -1,10 +1,12 @@
 package com.atguigu.common.vo;
 
 import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
 @Data
+@ToString
 public class MemberVO implements Serializable {
     private Long id;
     /**

@@ -504,7 +504,7 @@
 						<li>京东价</li>
 						<li>
 							<span>￥</span>
-							<span th:text="${#numbers.formatDecimal(skuItemVo.skuInfo.price,0,2)}">4499.00</span>
+							<span th:text="${#numbers.formatDecimal(skuItemVo.skuInfo.price,1,2)}">4499.00</span>
 						</li>
 						<li>
 							预约享资格
@@ -609,7 +609,7 @@
 
 				<div class="box-btns clear">
 					<div class="box-btns-one">
-						<input type="text" name="" id="" value="1" />
+						<input type="text" name="" id="num" value="1" />
 						<div class="box-btns-one1">
 
 							<div>
@@ -626,8 +626,8 @@
 						</div>
 					</div>
 					<div class="box-btns-two">
-						<a href="/static/item/../商品分类\index.html">
-							立即预约
+						<a id="addCart" th:attr="skuId=${skuItemVo.skuInfo.skuId}">
+							加入购物车
 						</a>
 					</div>
 					<div class="box-btns-three">
@@ -794,7 +794,7 @@
 
 			</ul>
 			<button class="Lijiyuyuessss">
-				立即预约
+				立即预约111
 			</button>
 			<ul class="shopjieshaos posi" style="display: none;">
 				<li class="jieshoa" style="background: #e4393c;">
@@ -1222,6 +1222,13 @@
 		console.log(filterEle[0])
 		location.href = "http://item.gulimail.com/"+filterEle[0]+".html";
 	});
+
+	$('#addCart').click(function (){
+		var num = $('#num').val();
+		var skuId = $('#addCart').attr("skuId");
+		location.href = "http://cart.gulimail.com/addToCart?skuId="+skuId+"&num="+num;
+		return false;
+	})
 </script>
 
 </html>

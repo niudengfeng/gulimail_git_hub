@@ -19,6 +19,7 @@
         <module>renren-generator</module>
         <module>gulimail-common</module>
         <module>gulimail-search</module>
+        <module>gulimail-cart</module>
     </modules>
 
 

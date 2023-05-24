@@ -2,6 +2,7 @@ package com.atguigu.gulimail.auth.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.common.utils.R;
+import com.atguigu.common.utils.RedisConstants;
 import com.atguigu.common.vo.MemberVO;
 import com.atguigu.gulimail.auth.feign.MemberFeignService;
 import com.atguigu.gulimail.auth.vo.LoginVo;
@@ -37,7 +38,7 @@ public class LoginAuthController {
         String jsonString = JSON.toJSONString(o);
         MemberVO memberVO1 = JSON.parseObject(jsonString, MemberVO.class);
         //登录成功，把用户信息放入缓存，回显首页相关用户信息
-        session.setAttribute("user",memberVO1);
+        session.setAttribute(RedisConstants.SESSION_USER_KEY,memberVO1);
         //如果成功返回首页
         return "redirect:http://gulimail.com";//重定向页面获取不到model里面的 数据需要引入 RedirectAttributes
     }
