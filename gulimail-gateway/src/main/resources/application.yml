@@ -81,3 +81,8 @@ spring:
           predicates:
             - Host=cart.gulimail.com
 
+        - id: order-thmleaf-route
+          uri: lb://gulimail-order
+          predicates:
+            - Host=order.gulimail.com
+

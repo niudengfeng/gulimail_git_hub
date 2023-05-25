@@ -3,22 +3,22 @@ package com.atguigu.gulimail.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.utils.RedisConstants;
-import com.atguigu.gulimail.ProductFeignService;
+import com.atguigu.gulimail.feign.ProductFeignService;
 import com.atguigu.gulimail.interpt.CartInterpt;
 import com.atguigu.gulimail.service.CartService;
 import com.atguigu.gulimail.vo.Cart;
 import com.atguigu.gulimail.vo.CartItem;
 import com.atguigu.gulimail.vo.SkuInfo;
-import com.atguigu.gulimail.vo.UserInfo;
+import com.atguigu.common.vo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
-import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -160,6 +160,34 @@ public class CartServiceImpl implements CartService {
     public void delItemBySkuId(Long skuId) {
         BoundHashOperations<String, Object, Object> hashOperations = getHashOperations();
         hashOperations.delete(skuId.toString());
+    }
+
+    @Override
+    public List<CartItem> getCartsByMemberId() {
+        UserInfo userInfo = CartInterpt.threadLocal.get();
+        if (userInfo==null){
+            //没有登录
+            return null;
+        }
+        String cartKey = RedisConstants.CART_USER_KEY_PREFIEX + userInfo.getUserId();
+        List<CartItem> cartList = getCartList(cartKey);
+        if (!CollectionUtils.isEmpty(cartList)){
+            //需要根据当前skuId拿到最新价格
+            /**
+             * TODO 下面循环遍历购物项的时候 最好优化下 把所有的skuId遍历出来,一次性请求到所有对应价格信息Map<"skuId",price>
+             */
+            for (CartItem cartItem : cartList) {
+                Long skuId = cartItem.getSkuId();
+                R info = productFeignService.info(skuId);
+                if (info.getCode().intValue() == 0) {
+                    SkuInfo skuInfo = JSON.parseObject(JSON.toJSONString(info.get("skuInfo")), SkuInfo.class);
+                    BigDecimal price = skuInfo.getPrice();
+                    cartItem.setPrice(price);
+                }
+            }
+            return cartList;
+        }
+        return null;
     }
 
     /**

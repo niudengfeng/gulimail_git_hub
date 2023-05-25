@@ -4,15 +4,17 @@ import com.atguigu.gulimail.interpt.CartInterpt;
 import com.atguigu.gulimail.service.CartService;
 import com.atguigu.gulimail.vo.Cart;
 import com.atguigu.gulimail.vo.CartItem;
-import com.atguigu.gulimail.vo.UserInfo;
-import org.bouncycastle.math.raw.Mod;
+import com.atguigu.common.vo.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Controller
@@ -20,6 +22,12 @@ public class CartController {
 
     @Autowired
     private CartService cartService;
+
+    @GetMapping("/getCartsByMemberId")
+    @ResponseBody
+    public List<CartItem> getCartsByMemberId(){
+        return cartService.getCartsByMemberId();
+    }
 
     /**
      * 购物车列表页数据获取方法

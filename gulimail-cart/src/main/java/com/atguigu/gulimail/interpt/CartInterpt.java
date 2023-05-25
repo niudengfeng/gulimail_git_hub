@@ -2,9 +2,7 @@ package com.atguigu.gulimail.interpt;
 
 import com.atguigu.common.utils.RedisConstants;
 import com.atguigu.common.vo.MemberVO;
-import com.atguigu.gulimail.vo.UserInfo;
-import org.apache.catalina.User;
-import org.springframework.util.CollectionUtils;
+import com.atguigu.common.vo.UserInfo;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -13,8 +11,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.UUID;
 
 public class CartInterpt implements HandlerInterceptor {

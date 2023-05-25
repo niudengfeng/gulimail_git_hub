@@ -1,14 +1,12 @@
 package com.atguigu.gulimail.member.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import com.atguigu.common.vo.MemberAddressVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimail.member.entity.MemberReceiveAddressEntity;
 import com.atguigu.gulimail.member.service.MemberReceiveAddressService;
@@ -29,6 +27,11 @@ import com.atguigu.common.utils.R;
 public class MemberReceiveAddressController {
     @Autowired
     private MemberReceiveAddressService memberReceiveAddressService;
+
+    @GetMapping("/getListByMemberId/{memberId}")
+    public List<MemberAddressVo> getListByMemberId(@PathVariable("memberId") Long memberId){
+        return memberReceiveAddressService.getListByMemberId(memberId);
+    }
 
     /**
      * 列表

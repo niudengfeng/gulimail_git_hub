@@ -34,7 +34,9 @@ public class Cart {
         totalAmount = BigDecimal.ZERO;
         if (!CollectionUtils.isEmpty(items)) {
             for (CartItem item : items) {
-                totalAmount = totalAmount.add(item.getTotalPrice());
+                if (item.getCheck()){
+                    totalAmount = totalAmount.add(item.getTotalPrice());
+                }
             }
         }
         //2.减去优惠减免的金额

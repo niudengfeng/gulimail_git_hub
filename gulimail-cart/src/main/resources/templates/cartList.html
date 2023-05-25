@@ -29,7 +29,7 @@
 				</li>
 				<li><a th:if="${session.user==null}" href="http://auth.gulimail.com/reg.html">免费注册</a></li>
 				<li class="spacer"></li>
-				<li><a href="">我的订单</a></li>
+				<li><a href="http://order.gulimail.com/list.html">我的订单</a></li>
 				<li class="spacer"></li>
 
 			</ul>
@@ -213,7 +213,7 @@
 <script src="/static/cart/js/index.js" charset="utf-8"></script>
 <script type="text/javascript">
 	function toTrade() {
-		window.location.href = "http://cart.gulimail.com/success.html";
+		window.location.href = "http://order.gulimail.com/toTrade";
 	}
 
 	function checkSku(chkbox) {

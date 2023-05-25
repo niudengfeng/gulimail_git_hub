@@ -1,4 +1,4 @@
-package com.atguigu.gulimail.vo;
+package com.atguigu.common.vo;
 
 import lombok.Data;
 import lombok.ToString;

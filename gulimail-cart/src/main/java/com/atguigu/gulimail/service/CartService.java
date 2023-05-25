@@ -2,8 +2,9 @@ package com.atguigu.gulimail.service;
 
 import com.atguigu.gulimail.vo.Cart;
 import com.atguigu.gulimail.vo.CartItem;
-import com.atguigu.gulimail.vo.UserInfo;
+import com.atguigu.common.vo.UserInfo;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public interface CartService {
@@ -18,4 +19,6 @@ public interface CartService {
     void changeCount(Long skuId, int num);
 
     void delItemBySkuId(Long skuId);
+
+    List<CartItem> getCartsByMemberId();
 }

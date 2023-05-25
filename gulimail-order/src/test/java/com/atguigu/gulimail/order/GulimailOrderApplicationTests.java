@@ -1,11 +1,13 @@
 package com.atguigu.gulimail.order;
 
 import com.atguigu.gulimail.order.entity.Stu;
+import com.atguigu.gulimail.order.mq.MqConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,17 +20,11 @@ import java.util.*;
 @RunWith(value = SpringRunner.class)
 class GulimailOrderApplicationTests {
 
-    public static final String queueName = "hello-queue";
-    public static final String exchangeName = "hello-direct-exchange";
-    public static final String routingKey = "hello.world";
-
     @Autowired
     private AmqpAdmin amqpAdmin;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
-
-    String a = "111";
 
     /**
      * 1.创建一个DirectExchange交换机
@@ -40,9 +36,9 @@ class GulimailOrderApplicationTests {
      */
     @Test
     void createExchange() {
-        DirectExchange directExchange = new DirectExchange(exchangeName);
+        DirectExchange directExchange = new DirectExchange(MqConstants.TESTEXCHANGENAME);
         amqpAdmin.declareExchange(directExchange);
-        log.info("创建交换机[{}]成功",exchangeName);
+        log.info("创建交换机[{}]成功",MqConstants.TESTEXCHANGENAME);
     }
 
     /**
@@ -55,9 +51,9 @@ class GulimailOrderApplicationTests {
      */
     @Test
     void createQueue() {
-        Queue queue = new Queue(queueName);
+        Queue queue = new Queue(MqConstants.TESTQUEUENAME);
         String s = amqpAdmin.declareQueue(queue);
-        log.info("创建队列[{}]成功",queueName);
+        log.info("创建队列[{}]成功",MqConstants.TESTQUEUENAME);
     }
 
     /**
@@ -70,7 +66,7 @@ class GulimailOrderApplicationTests {
      */
     @Test
     void creatBinding(){
-        Binding binding = new Binding(queueName, Binding.DestinationType.QUEUE,exchangeName,routingKey,null);
+        Binding binding = new Binding(MqConstants.TESTQUEUENAME, Binding.DestinationType.QUEUE,MqConstants.TESTEXCHANGENAME,MqConstants.TESTROUTINGKEY,null);
         amqpAdmin.declareBinding(binding);
         log.info("创建绑定[{}]成功","hello-Binding");
     }
@@ -88,7 +84,7 @@ class GulimailOrderApplicationTests {
         stu.setName("张三");
         stu.setDate(new Date());
         stu.setA(Arrays.asList("1","2","3"));
-        rabbitTemplate.convertAndSend(exchangeName,routingKey, stu);
+        rabbitTemplate.convertAndSend(MqConstants.TESTEXCHANGENAME,MqConstants.TESTROUTINGKEY, stu,new CorrelationData(UUID.randomUUID().toString()));
         log.info("消息发送[{}]成功",stu);
     }
 
