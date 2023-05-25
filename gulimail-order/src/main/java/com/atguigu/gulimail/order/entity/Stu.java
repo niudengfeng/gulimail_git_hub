@@ -1,4 +1,4 @@
-package com.atguigu.gulimail.order;
+package com.atguigu.gulimail.order.entity;
 
 import lombok.Data;
 import lombok.ToString;

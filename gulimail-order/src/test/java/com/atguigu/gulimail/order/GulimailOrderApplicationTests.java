@@ -1,21 +1,16 @@
 package com.atguigu.gulimail.order;
 
-import com.alibaba.fastjson.JSON;
-import lombok.Data;
-import lombok.ToString;
+import com.atguigu.gulimail.order.entity.Stu;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.junit.runner.Runner;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.Serializable;
 import java.util.*;
 
 @SpringBootTest

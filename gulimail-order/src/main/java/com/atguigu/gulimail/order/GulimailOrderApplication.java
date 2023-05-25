@@ -1,7 +1,11 @@
 package com.atguigu.gulimail.order;
 
 import com.atguigu.common.config.SessionConfig;
+import com.atguigu.gulimail.order.entity.Stu;
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -26,8 +30,31 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 @EnableRabbit
 public class GulimailOrderApplication {
 
+    public static final String queueName = "hello-queue";
+
     public static void main(String[] args) {
         SpringApplication.run(GulimailOrderApplication.class, args);
     }
+
+
+    /**
+     * 监听mq队列消息
+     * 特性：可以有很多服务一起来监听这个队列，只要收到消息，队列删除消息，而且只能有一个服务去消费这条消息
+     * 场景模拟：
+     *  1.启动多个服务一起去监听同一个队列：同一个消息只会被消费一次。不会重复消费
+     *
+     * @param message 消息包装类
+     * @param stu  T 自定义的消息
+     * @param channel 通道信息
+     *
+     */
+    @RabbitListener(queues = queueName)
+    public void receive(Message message, Stu stu, Channel channel){
+        System.out.println("接收到消息message:"+message);
+        System.out.println("接收到消息头:"+message.getMessageProperties().getHeaders());
+        System.out.println("接收到消息体:"+new String(message.getBody()));
+        System.out.println("接收到消息自定义对象Stu:"+stu);
+    }
+
 
 }
