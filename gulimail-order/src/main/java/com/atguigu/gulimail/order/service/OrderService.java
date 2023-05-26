@@ -1,5 +1,7 @@
 package com.atguigu.gulimail.order.service;
 
+import com.atguigu.gulimail.order.vo.SubmitOrderResponseVo;
+import com.atguigu.common.vo.SubmitOrderVo;
 import com.atguigu.gulimail.order.vo.OrderVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.atguigu.common.utils.PageUtils;
@@ -20,5 +22,6 @@ public interface OrderService extends IService<OrderEntity> {
 
     OrderVo toTrade();
 
+    SubmitOrderResponseVo createOrder(SubmitOrderVo submitOrderVo);
 }
 

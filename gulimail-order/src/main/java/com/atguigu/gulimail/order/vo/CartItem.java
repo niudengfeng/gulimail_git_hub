@@ -14,4 +14,7 @@ public class CartItem {
     private Integer count = 1;
     private BigDecimal totalPrice;
     private List<String> skuAttr;//获取当前skuId对应的销售属性
+
+    private Boolean hasStock = true;//是否有货
+    private BigDecimal weight;//重量
 }

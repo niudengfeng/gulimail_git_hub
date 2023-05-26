@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 会员收货地址
@@ -62,4 +63,8 @@ public class MemberAddressVo implements Serializable {
 	 */
 	private Integer defaultStatus;
 
+	/**
+	 * 对应运费 查询第三方所得，这里咱就自定义
+	 */
+	private BigDecimal moneyYun;
 }

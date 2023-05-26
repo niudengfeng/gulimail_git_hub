@@ -3,6 +3,8 @@ package com.atguigu.gulimail.order.mq;
 
 import com.atguigu.gulimail.order.entity.Stu;
 import com.atguigu.gulimail.order.entity.Teacher;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -17,12 +19,14 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
+@Api(tags = "mq测试类")
 public class MqSendTestController {
 
     @Autowired
     RabbitTemplate rabbitTemplate;
 
     @GetMapping("/sendSms/{num}")
+    @ApiOperation(value = "发送消息测试")
     public String sendMq(@PathVariable("num") int num){
         for (int i = 0; i < num; i++) {
             if (i % 2 == 0){

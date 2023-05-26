@@ -10,7 +10,7 @@ import lombok.Data;
 
 /**
  * 订单项信息
- * 
+ *
  * @author niudengfeng
  * @email 519507446@qq.com
  * @date 2021-03-23 15:00:44
@@ -48,7 +48,7 @@ public class OrderItemEntity implements Serializable {
 	/**
 	 * 品牌
 	 */
-	private String spuBrand;
+	private Long spuBrandId;
 	/**
 	 * 商品分类id
 	 */

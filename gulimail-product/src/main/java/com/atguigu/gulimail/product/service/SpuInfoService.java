@@ -21,5 +21,7 @@ public interface SpuInfoService extends IService<SpuInfoEntity> {
     void saveInfo(SaveSpuInfoBean spuInfoBean);
 
     void up(Long spuId);
+
+    SpuInfoEntity getInfoBySkuId(Long skuId);
 }
 

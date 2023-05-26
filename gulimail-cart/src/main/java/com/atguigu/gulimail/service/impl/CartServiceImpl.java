@@ -172,7 +172,7 @@ public class CartServiceImpl implements CartService {
         String cartKey = RedisConstants.CART_USER_KEY_PREFIEX + userInfo.getUserId();
         List<CartItem> cartList = getCartList(cartKey);
         if (!CollectionUtils.isEmpty(cartList)){
-            //需要根据当前skuId拿到最新价格
+            //需要根据当前skuId拿到最新价格:又去prodcut商品服务实际查询了一次保证是最新的
             /**
              * TODO 下面循环遍历购物项的时候 最好优化下 把所有的skuId遍历出来,一次性请求到所有对应价格信息Map<"skuId",price>
              */
