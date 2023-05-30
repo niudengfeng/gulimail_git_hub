@@ -1,11 +1,18 @@
 package com.atguigu.gulimail.ware.service.impl;
 
+import com.atguigu.common.constants.MqConstants;
+import com.atguigu.common.dto.mq.StockLockedTo;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.OrderItem;
 import com.atguigu.common.vo.OrderLockVO;
 import com.atguigu.common.exception.NoStockException;
+import com.atguigu.gulimail.ware.entity.WareOrderTaskDetailEntity;
+import com.atguigu.gulimail.ware.entity.WareOrderTaskEntity;
+import com.atguigu.gulimail.ware.service.WareOrderTaskDetailService;
+import com.atguigu.gulimail.ware.service.WareOrderTaskService;
 import com.atguigu.gulimail.ware.service.feign.ProductFeignService;
 import com.atguigu.gulimail.ware.vo.SkuHasStockWareVo;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +44,14 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
     @Autowired
     private ProductFeignService productFeignService;
 
+    @Autowired
+    private WareOrderTaskService taskService;
+
+    @Autowired
+    private WareOrderTaskDetailService taskDetailService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         QueryWrapper<WareSkuEntity> wrapper = new QueryWrapper<WareSkuEntity>();
@@ -98,12 +113,22 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
 
     /**
      * 提交订单后锁定库存
+     * 以下两种情况需要根据工作单解锁对应仓库的商品数量
+     * 1.正常锁定，然后用户取消订单了,
+     * 2.锁定成功，order服务报错，事务回滚
+     * 以上两种情况都是锁定库存方法执行成功，如果报错，所库存失败，无需解锁，因为下面是在一个本地事务，（部分成功锁定的情况）但是消息发出去了，处理消息的时候根据taskId查询，查不到不处理，因为回滚了task
      * @param orderLockVO
      * @return
      */
     @Override
     @Transactional(rollbackFor = NoStockException.class)
     public void lockStock(OrderLockVO orderLockVO) {
+        /**
+         * 保存库存工作单，能回滚 追溯
+         */
+        WareOrderTaskEntity task = new WareOrderTaskEntity();
+        task.setOrderSn(orderLockVO.getOrderSn());
+        taskService.save(task);
         //1.先根据订单项遍历得到 每个商品SKUID对应的有库存的仓库
         List<OrderItem> orderItems = orderLockVO.getOrderItems();
         List<SkuHasStockWareVo> skuHasStockWares = orderItems.stream().map(m -> {
@@ -130,6 +155,19 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
                 if (lockCount>0){
                     //锁定成功
                     lock = true;
+                    WareOrderTaskDetailEntity taskDetail = new WareOrderTaskDetailEntity();
+                    taskDetail.setSkuId(skuId);
+                    taskDetail.setWareId(wareId);
+                    taskDetail.setSkuNum(count);
+                    taskDetail.setLockStatus(1);
+                    taskDetail.setTaskId(task.getId());
+                    taskDetailService.save(taskDetail);
+
+                    StockLockedTo stockLockedTo = new StockLockedTo();
+                    stockLockedTo.setTaskId(task.getId());
+                    stockLockedTo.setTaskDetailId(taskDetail.getId());
+                    //TODO 锁定成功，发送消息通知MQ,让他去检查这个sku对应订单是否正常，不正常需要回滚
+                    rabbitTemplate.convertAndSend(MqConstants.stockEventExchange,MqConstants.stockLockRoutingKey,stockLockedTo);
                     break;
                 }
                 //继续去下一个仓库锁定

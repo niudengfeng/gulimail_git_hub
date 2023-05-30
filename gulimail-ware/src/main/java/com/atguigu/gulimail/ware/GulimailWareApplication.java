@@ -3,6 +3,7 @@ package com.atguigu.gulimail.ware;
 import com.atguigu.common.config.SessionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -23,6 +24,7 @@ import java.net.UnknownHostException;
 @SpringBootApplication
 @EnableSwagger2
 @Slf4j
+@EnableRabbit
 public class GulimailWareApplication {
 
     public static void main(String[] args) throws UnknownHostException {

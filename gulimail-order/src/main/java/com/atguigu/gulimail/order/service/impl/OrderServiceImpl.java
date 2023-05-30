@@ -19,8 +19,9 @@ import com.atguigu.gulimail.order.feign.WareFeign;
 import com.atguigu.gulimail.order.interceptor.LoginUserInterCeptor;
 import com.atguigu.gulimail.order.vo.CartItem;
 import com.atguigu.gulimail.order.vo.OrderVo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import io.seata.spring.annotation.GlobalTransactional;
+//import io.seata.spring.annotation.GlobalTransactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -76,6 +77,95 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         );
 
         return new PageUtils(page);
+    }
+
+    /**
+     * 远程调用 不可避免的会出现分布式事务问题，引入Seata
+     * 但是这里是下单接口，高并发下不适用seata，因为AT模式下的原理是利用本地锁+全局事务锁来结合完成的。引入MQ延时队列完成
+     * @param submitOrderVo
+     * @return
+     */
+    @Override
+//    @GlobalTransactional//seata全局事务
+    @Transactional
+    public SubmitOrderResponseVo createOrder(SubmitOrderVo submitOrderVo) {
+        SubmitOrderResponseVo responseVo = new SubmitOrderResponseVo();
+        MemberVO memberVO = LoginUserInterCeptor.threadLocal.get();
+        Long userId = memberVO.getId();
+        //1.验证令牌：这里需要保证检查和删除是一个原子操作，准备LUA脚本
+        String key = RedisConstants.ORDER_TOKEN_USER_PREFIX + userId;
+        String scipt = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+        String orderToken = submitOrderVo.getOrderToken();
+        //脚本执行后返回LONG类型 0代表失败  1代表成功
+        Long execute = redisTemplate.execute(new DefaultRedisScript<Long>(scipt,Long.class), Arrays.asList(key), orderToken);
+        if (execute == 0L){
+            //令牌校验失败
+            responseVo.setCode(100);
+            return responseVo;
+        }else {
+            //成功
+            //2.创建订单
+            OrderResponseTo orderResponseTo = create(submitOrderVo);
+            //我们自己计算的应付金额
+            OrderEntity order = orderResponseTo.getOrder();
+            BigDecimal payAmount = order.getPayAmount();
+            //页面传过来的应付金额
+            BigDecimal payAmount1 = submitOrderVo.getPayAmount();
+            //3.验价：需要验证：这里只要相差金额小于0.01都算可以
+            if (Math.abs(payAmount.subtract(payAmount1).doubleValue())<0.01){
+                //4.保存订单
+                this.save(order);
+                //5.保存订单项
+                orderItemService.saveBatch(orderResponseTo.getOrderItemEntityList());
+                //6.锁定库存
+                OrderLockVO orderLockVO = new OrderLockVO();
+                orderLockVO.setOrderSn(order.getOrderSn());
+                List<OrderItem> orderItems = orderResponseTo.getOrderItemEntityList().stream().map(m -> {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setCount(m.getSkuQuantity());
+                    orderItem.setSkuId(m.getSkuId());
+                    orderItem.setSkuName(m.getSkuName());
+                    return orderItem;
+                }).collect(Collectors.toList());
+                orderLockVO.setOrderItems(orderItems);
+                //远程锁定库存
+                R r = wareFeign.lockStock(orderLockVO);
+                if (r.getCode()==0){
+                    //锁定成功
+                    responseVo.setOrder(order);
+                    responseVo.setCode(0);
+                    //模拟错误，看能否回滚库存服务里面的事务
+//                    int a = 10/0;
+                    //7.远程减积分
+                    return responseVo;
+                }else {
+                    //锁定库存失败
+                    throw new NoStockException(order.getId());
+                }
+            }else {
+                //验价失败
+                responseVo.setCode(300);
+                return responseVo;
+            }
+        }
+        /*if (!StringUtils.isEmpty(orderToken) && orderToken.equals(redisToken)){
+            //验证成功，删除令牌
+            redisTemplate.delete(key);
+        }else {
+            responseVo.setCode(100);
+        }*/
+    }
+
+    @Override
+    public OrderEntity getOrderStatus(String orderSn) {
+        QueryWrapper<OrderEntity> orderEntityQueryWrapper = new QueryWrapper<>();
+        orderEntityQueryWrapper.eq("order_sn",orderSn);
+        List<OrderEntity> orderEntities = this.getBaseMapper().selectList(orderEntityQueryWrapper);
+        if (CollectionUtils.isEmpty(orderEntities)){
+            return null;
+        }else {
+            return orderEntities.get(0);
+        }
     }
 
     /**
@@ -154,82 +244,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         String key = orderTokenUserPrefix + memberVO.getId();
         redisTemplate.opsForValue().set(key,token,30, TimeUnit.MINUTES);//默认存储30分钟，然后令牌失效
         return orderVo;
-    }
-
-    /**
-     * 远程调用 不可避免的会出现分布式事务问题，引入Seata
-     * @param submitOrderVo
-     * @return
-     */
-    @Override
-    @GlobalTransactional//seata全局事务
-    @Transactional
-    public SubmitOrderResponseVo createOrder(SubmitOrderVo submitOrderVo) {
-        SubmitOrderResponseVo responseVo = new SubmitOrderResponseVo();
-        MemberVO memberVO = LoginUserInterCeptor.threadLocal.get();
-        Long userId = memberVO.getId();
-        //1.验证令牌：这里需要保证检查和删除是一个原子操作，准备LUA脚本
-        String key = RedisConstants.ORDER_TOKEN_USER_PREFIX + userId;
-        String scipt = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-        String orderToken = submitOrderVo.getOrderToken();
-        //脚本执行后返回LONG类型 0代表失败  1代表成功
-        Long execute = redisTemplate.execute(new DefaultRedisScript<Long>(scipt,Long.class), Arrays.asList(key), orderToken);
-        if (execute == 0L){
-            //令牌校验失败
-            responseVo.setCode(100);
-            return responseVo;
-        }else {
-            //成功
-            //2.创建订单
-            OrderResponseTo orderResponseTo = create(submitOrderVo);
-            //我们自己计算的应付金额
-            OrderEntity order = orderResponseTo.getOrder();
-            BigDecimal payAmount = order.getPayAmount();
-            //页面传过来的应付金额
-            BigDecimal payAmount1 = submitOrderVo.getPayAmount();
-            //3.验价：需要验证：这里只要相差金额小于0.01都算可以
-            if (Math.abs(payAmount.subtract(payAmount1).doubleValue())<0.01){
-                //4.保存订单
-                this.save(order);
-                //5.保存订单项
-                orderItemService.saveBatch(orderResponseTo.getOrderItemEntityList());
-                //6.锁定库存
-                OrderLockVO orderLockVO = new OrderLockVO();
-                orderLockVO.setOrderSn(order.getOrderSn());
-                List<OrderItem> orderItems = orderResponseTo.getOrderItemEntityList().stream().map(m -> {
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setCount(m.getSkuQuantity());
-                    orderItem.setSkuId(m.getSkuId());
-                    orderItem.setSkuName(m.getSkuName());
-                    return orderItem;
-                }).collect(Collectors.toList());
-                orderLockVO.setOrderItems(orderItems);
-                //远程锁定库存
-                R r = wareFeign.lockStock(orderLockVO);
-                if (r.getCode()==0){
-                    //锁定成功
-                    responseVo.setOrder(order);
-                    responseVo.setCode(0);
-                    //模拟错误，看能否回滚库存服务里面的事务
-//                    int a = 10/0;
-                    //7.远程减积分
-                    return responseVo;
-                }else {
-                    //锁定库存失败
-                    throw new NoStockException(order.getId());
-                }
-            }else {
-                //验价失败
-                responseVo.setCode(300);
-                return responseVo;
-            }
-        }
-        /*if (!StringUtils.isEmpty(orderToken) && orderToken.equals(redisToken)){
-            //验证成功，删除令牌
-            redisTemplate.delete(key);
-        }else {
-            responseVo.setCode(100);
-        }*/
     }
 
     /**

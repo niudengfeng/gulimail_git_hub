@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.zaxxer.hikari.HikariDataSource;
-import io.seata.rm.datasource.DataSourceProxy;
+//import io.seata.rm.datasource.DataSourceProxy;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -42,6 +42,7 @@ public class MybatisConfig {
     }
 
 
+/*
     @Autowired
     DataSourceProperties dataSourceProperties;
 
@@ -53,6 +54,7 @@ public class MybatisConfig {
         }
         return new DataSourceProxy(dataSource);
     }
+*/
 
 
 }

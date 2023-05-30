@@ -1,9 +1,9 @@
 package com.atguigu.gulimail.order;
 
 import com.atguigu.gulimail.order.entity.Stu;
-import com.atguigu.gulimail.order.mq.MqConstants;
+import com.atguigu.common.constants.MqConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.core.Queue;
@@ -15,9 +15,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.*;
 
-@SpringBootTest
 @Slf4j
-@RunWith(value = SpringRunner.class)
+@SpringBootTest
+@RunWith(SpringRunner.class)
 class GulimailOrderApplicationTests {
 
     @Autowired
@@ -78,7 +78,7 @@ class GulimailOrderApplicationTests {
      * 3.或者修改消息体的序列化机制json序列化，这样我们实体对象可以直接发送，并且不需要实现Serializable，需要自定义配置MqConfig
      */
     @Test
-    void testSendMsg(){
+    public void testSendMsg(){
         Stu stu = new Stu();
         stu.setAge(18);
         stu.setName("张三");

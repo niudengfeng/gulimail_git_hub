@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.order.mq;
 
+import com.atguigu.common.constants.MqConstants;
 import com.atguigu.gulimail.order.entity.Stu;
 import com.atguigu.gulimail.order.entity.Teacher;
 import com.rabbitmq.client.Channel;

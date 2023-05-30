@@ -41,6 +41,13 @@ public class OrderController {
         return R.ok().put("page", page);
     }
 
+    @RequestMapping("/getOrderStatus/{orderSn}")
+    public R getOrderStatus(@PathVariable("orderSn") String orderSn){
+        OrderEntity order = orderService.getOrderStatus(orderSn);
+        return R.ok().put("order", order);
+    }
+
+
 
     /**
      * 信息

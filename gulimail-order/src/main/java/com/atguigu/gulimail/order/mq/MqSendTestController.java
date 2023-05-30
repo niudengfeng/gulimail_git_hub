@@ -1,6 +1,8 @@
 package com.atguigu.gulimail.order.mq;
 
 
+import com.atguigu.common.constants.MqConstants;
+import com.atguigu.gulimail.order.entity.OrderEntity;
 import com.atguigu.gulimail.order.entity.Stu;
 import com.atguigu.gulimail.order.entity.Teacher;
 import io.swagger.annotations.Api;
@@ -11,6 +13,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
@@ -19,6 +22,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
+@RequestMapping("/mq")
 @Api(tags = "mq测试类")
 public class MqSendTestController {
 
@@ -58,4 +62,17 @@ public class MqSendTestController {
         log.info("消息发送[{}]成功",stu);
     }
 
+
+    @GetMapping("/testYsSend")
+    @ApiOperation("测试延时队列发送")
+    public String testYs(){
+        String orderId = UUID.randomUUID().toString();
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setOrderSn(orderId);
+        orderEntity.setModifyTime(new Date());
+        rabbitTemplate.convertAndSend(MqConstants.orderEventExchange,
+                MqConstants.orderCreateOrderRoutingKey,orderEntity,
+                new CorrelationData(orderId));
+        return "ok";
+    }
 }
