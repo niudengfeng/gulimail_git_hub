@@ -10,6 +10,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -76,6 +77,27 @@ import java.net.UnknownHostException;
  *              c:可以拒收消息，重回队列：channel.basicNack(deliveryTag,false,true);第一个参数是个自动递增的序号，第二个true代表是否批量处理，建议不要批量，来一个确认一个，第三个参数代表是否重回队列，如果是，那么可以重新消费，建议入库，这里错误就丢弃
  *
  *
+ *
+ * 记录使用Seata分布式事务详细步骤
+ * 1.给每个需要回滚的数据库加一个undo_log表
+ * 2.安装事务协调器TC:即seata服务安装包
+ * 3.整合seata到我们的项目中
+ *  1.引入依赖: 注意下面这个依赖会自动导入个 seata-all-0.7.1  这个版本需要和你安装的seata服务包版本一致
+ *          <dependency>
+ *             <groupId>com.alibaba.cloud</groupId>
+ *             <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+ *         </dependency>
+ *   2.解压并启动下载下来的seata-server-0.7.1.zip:
+ *          打开文件夹看到两个配置文件
+ *              regist.conf : 配置文件：先把regist注册改成nacos
+ *              file.conf : 这个先不动
+ *   3.所有需要用到分布式事务的微服务使用seata的数据源包装下，配置写在了，MySeataConfig.java文件中，目前给order和ware服务加了
+ *   4.每个服务都必须导入
+ *           regist.conf : 配置文件：先把regist注册改成nacos
+ *           file.conf :service下的 vgroup_mapping.{application.name}-fescar-service-group = "default"
+ *   5.启动测试分布式事务
+ *   6.给分布式大事务的方法上加个注解@GlobalTransactional
+ *   7.每一个小事务加上@Transactional即可
  */
 @EnableRedisHttpSession//开启spring session
 @Import(SessionConfig.class)

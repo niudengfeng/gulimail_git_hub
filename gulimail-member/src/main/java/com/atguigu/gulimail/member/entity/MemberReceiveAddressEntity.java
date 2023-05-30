@@ -4,12 +4,13 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import lombok.Data;
 
 /**
  * 会员收货地址
- * 
+ *
  * @author niudengfeng
  * @email 519507446@qq.com
  * @date 2021-03-23 15:05:52
@@ -64,5 +65,7 @@ public class MemberReceiveAddressEntity implements Serializable {
 	 * 是否默认
 	 */
 	private Integer defaultStatus;
+
+	private BigDecimal moneyYun;
 
 }

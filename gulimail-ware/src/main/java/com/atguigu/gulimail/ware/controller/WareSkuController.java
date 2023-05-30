@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.atguigu.common.BizCode;
+import com.atguigu.common.vo.OrderLockVO;
+import com.atguigu.common.exception.NoStockException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,6 +40,16 @@ public class WareSkuController {
         return R.ok().put("data", map);
     }
 
+    @RequestMapping("/lockStock")
+    public R lockStock(@RequestBody OrderLockVO orderLockVO){
+        try {
+            wareSkuService.lockStock(orderLockVO);
+            return R.ok();
+        }catch (NoStockException e){
+            return R.error(BizCode.LOCK_FAIL.code,BizCode.LOCK_FAIL.getMsg());
+        }
+    }
+
     /**
      * 列表
      */
@@ -55,7 +68,7 @@ public class WareSkuController {
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("ware:waresku:info")
     public R info(@PathVariable("id") Long id){
-		WareSkuEntity wareSku = wareSkuService.getById(id);
+            WareSkuEntity wareSku = wareSkuService.getById(id);
 
         return R.ok().put("wareSku", wareSku);
     }
@@ -66,7 +79,7 @@ public class WareSkuController {
     @RequestMapping("/save")
     //@RequiresPermissions("ware:waresku:save")
     public R save(@RequestBody WareSkuEntity wareSku){
-		wareSkuService.save(wareSku);
+            wareSkuService.save(wareSku);
 
         return R.ok();
     }
@@ -77,7 +90,7 @@ public class WareSkuController {
     @RequestMapping("/update")
     //@RequiresPermissions("ware:waresku:update")
     public R update(@RequestBody WareSkuEntity wareSku){
-		wareSkuService.updateById(wareSku);
+            wareSkuService.updateById(wareSku);
 
         return R.ok();
     }
@@ -88,7 +101,7 @@ public class WareSkuController {
     @RequestMapping("/delete")
     //@RequiresPermissions("ware:waresku:delete")
     public R delete(@RequestBody Long[] ids){
-		wareSkuService.removeByIds(Arrays.asList(ids));
+            wareSkuService.removeByIds(Arrays.asList(ids));
 
         return R.ok();
     }

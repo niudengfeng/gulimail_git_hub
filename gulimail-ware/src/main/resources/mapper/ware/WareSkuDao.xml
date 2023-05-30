@@ -15,8 +15,14 @@
     <update id="updateByWrapper">
         update wms_ware_sku set stock = stock + #{skuNum} where sku_id = #{skuId} and ware_id = #{wareId}
     </update>
+    <update id="lockStock">
+        UPDATE wms_ware_sku SET stock_locked = stock_locked + #{count} WHERE sku_id=#{skuId} and ware_id = #{wareId} and (stock-stock_locked) &gt;=#{count}
+    </update>
     <select id="hasStockBySkuId" resultType="java.lang.Integer">
         SELECT IFNULL(SUM(stock-stock_locked),0) FROM wms_ware_sku WHERE sku_id = #{skuId}
+    </select>
+    <select id="listWareIdsBySkuId" resultType="java.lang.Long">
+        SELECT ware_id FROM `wms_ware_sku` WHERE sku_id=#{skuId} and stock-stock_locked>0
     </select>
 
 

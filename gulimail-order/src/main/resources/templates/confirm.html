@@ -444,7 +444,7 @@
 </div>
 
 <!--主体部分-->
-<p class="p1">填写并核对订单信息</p>
+<p class="p1">填写并核对订单信息:<span style="color: red" th:text="${msg}"></span></p>
 <div class="section">
 	<!--收货人信息-->
 	<div class="top-2">
@@ -829,7 +829,7 @@
 
 		//计算应付 = 应付-运费
 		var total = $('#yingfu').attr('total');
-		var a = Number(total)-Number(money);
+		var a = Number(total)+Number(money);
 		$('#yingfu').text(a)
 		var name = $(".addr-item p[def ='1']").attr('name');
 		var province = $(".addr-item p[def ='1']").attr('province');
@@ -852,9 +852,9 @@
 		var money = $(this).attr('moneyYun');
 		$('#moneyYun').text(money)
 
-		//计算应付 = 应付-运费
+		//计算应付 = 应付+运费
 		var total = $('#yingfu').attr('total');
-		var a = Number(total)-Number(money);
+		var a = Number(total)+Number(money);
 		$('#yingfu').text(a)
 
 		var name = $(this).attr('name');

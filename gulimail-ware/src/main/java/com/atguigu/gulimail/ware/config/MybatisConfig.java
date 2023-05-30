@@ -3,10 +3,17 @@ package com.atguigu.gulimail.ware.config;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.zaxxer.hikari.HikariDataSource;
+import io.seata.rm.datasource.DataSourceProxy;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.util.StringUtils;
+
+import javax.sql.DataSource;
 
 @Configuration
 @EnableTransactionManagement
@@ -33,5 +40,19 @@ public class MybatisConfig {
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         return interceptor;
     }
+
+
+    @Autowired
+    DataSourceProperties dataSourceProperties;
+
+    @Bean
+    public DataSource dataSource(DataSourceProperties properties){
+        HikariDataSource dataSource = properties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
+        if (StringUtils.hasText(properties.getName())) {
+            dataSource.setPoolName(properties.getName());
+        }
+        return new DataSourceProxy(dataSource);
+    }
+
 
 }

@@ -2,17 +2,17 @@ package com.atguigu.gulimail.order.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSON;
+import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.utils.RedisConstants;
-import com.atguigu.common.vo.MemberAddressVo;
-import com.atguigu.common.vo.MemberVO;
+import com.atguigu.common.vo.*;
 import com.atguigu.gulimail.order.entity.OrderItemEntity;
 import com.atguigu.gulimail.order.enume.OrderStatusEnum;
 import com.atguigu.gulimail.order.feign.ProductFeign;
+import com.atguigu.gulimail.order.service.OrderItemService;
 import com.atguigu.gulimail.order.to.OrderResponseTo;
 import com.atguigu.gulimail.order.vo.SpuInfoVo;
 import com.atguigu.gulimail.order.vo.SubmitOrderResponseVo;
-import com.atguigu.common.vo.SubmitOrderVo;
 import com.atguigu.gulimail.order.feign.CartFeign;
 import com.atguigu.gulimail.order.feign.MemberFeign;
 import com.atguigu.gulimail.order.feign.WareFeign;
@@ -20,6 +20,7 @@ import com.atguigu.gulimail.order.interceptor.LoginUserInterCeptor;
 import com.atguigu.gulimail.order.vo.CartItem;
 import com.atguigu.gulimail.order.vo.OrderVo;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -42,6 +43,7 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimail.order.dao.OrderDao;
 import com.atguigu.gulimail.order.entity.OrderEntity;
 import com.atguigu.gulimail.order.service.OrderService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestAttributes;
@@ -63,6 +65,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private StringRedisTemplate redisTemplate;
     @Autowired
     private ProductFeign productFeign;
+    @Autowired
+    private OrderItemService orderItemService;
+
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<OrderEntity> page = this.page(
@@ -93,13 +98,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             RequestContextHolder.setRequestAttributes(requestAttributes);
 
             List<MemberAddressVo> listByMemberId = memberFeign.getListByMemberId(memberId);
-            if (!CollectionUtils.isEmpty(listByMemberId)){
+            /*if (!CollectionUtils.isEmpty(listByMemberId)){
                 listByMemberId = listByMemberId.stream().map(m->{
                     int i = RandomUtil.randomInt(1, 10);
                     m.setMoneyYun(new BigDecimal(i));
                     return m;
                 }).collect(Collectors.toList());
-            }
+            }*/
             orderVo.setAddress(listByMemberId);
         }, executor);
 
@@ -151,7 +156,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         return orderVo;
     }
 
+    /**
+     * 远程调用 不可避免的会出现分布式事务问题，引入Seata
+     * @param submitOrderVo
+     * @return
+     */
     @Override
+    @GlobalTransactional//seata全局事务
+    @Transactional
     public SubmitOrderResponseVo createOrder(SubmitOrderVo submitOrderVo) {
         SubmitOrderResponseVo responseVo = new SubmitOrderResponseVo();
         MemberVO memberVO = LoginUserInterCeptor.threadLocal.get();
@@ -163,34 +175,61 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         //脚本执行后返回LONG类型 0代表失败  1代表成功
         Long execute = redisTemplate.execute(new DefaultRedisScript<Long>(scipt,Long.class), Arrays.asList(key), orderToken);
         if (execute == 0L){
-            //失败
-            responseVo.setCode(400);
+            //令牌校验失败
+            responseVo.setCode(100);
             return responseVo;
         }else {
             //成功
+            //2.创建订单
             OrderResponseTo orderResponseTo = create(submitOrderVo);
             //我们自己计算的应付金额
-            BigDecimal payAmount = orderResponseTo.getOrder().getPayAmount();
+            OrderEntity order = orderResponseTo.getOrder();
+            BigDecimal payAmount = order.getPayAmount();
             //页面传过来的应付金额
             BigDecimal payAmount1 = submitOrderVo.getPayAmount();
-            //需要验证：这里只要相差金额小于0.01都算可以
+            //3.验价：需要验证：这里只要相差金额小于0.01都算可以
             if (Math.abs(payAmount.subtract(payAmount1).doubleValue())<0.01){
-                //继续往下
+                //4.保存订单
+                this.save(order);
+                //5.保存订单项
+                orderItemService.saveBatch(orderResponseTo.getOrderItemEntityList());
+                //6.锁定库存
+                OrderLockVO orderLockVO = new OrderLockVO();
+                orderLockVO.setOrderSn(order.getOrderSn());
+                List<OrderItem> orderItems = orderResponseTo.getOrderItemEntityList().stream().map(m -> {
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setCount(m.getSkuQuantity());
+                    orderItem.setSkuId(m.getSkuId());
+                    orderItem.setSkuName(m.getSkuName());
+                    return orderItem;
+                }).collect(Collectors.toList());
+                orderLockVO.setOrderItems(orderItems);
+                //远程锁定库存
+                R r = wareFeign.lockStock(orderLockVO);
+                if (r.getCode()==0){
+                    //锁定成功
+                    responseVo.setOrder(order);
+                    responseVo.setCode(0);
+                    //模拟错误，看能否回滚库存服务里面的事务
+//                    int a = 10/0;
+                    //7.远程减积分
+                    return responseVo;
+                }else {
+                    //锁定库存失败
+                    throw new NoStockException(order.getId());
+                }
             }else {
                 //验价失败
-                responseVo.setCode(400);
+                responseVo.setCode(300);
                 return responseVo;
             }
         }
-
-
         /*if (!StringUtils.isEmpty(orderToken) && orderToken.equals(redisToken)){
             //验证成功，删除令牌
             redisTemplate.delete(key);
         }else {
-            responseVo.setCode(400);
+            responseVo.setCode(100);
         }*/
-        return responseVo;
     }
 
     /**
@@ -214,8 +253,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         List<OrderItemEntity> orderItems = builderOrderItems(orderSn);
         //3.计算价格
         computePrice(orderItems,orderEntity);
-
-
+        orderResponseTo.setOrderItemEntityList(orderItems);
+        orderResponseTo.setOrder(orderEntity);
         return orderResponseTo;
     }
 
