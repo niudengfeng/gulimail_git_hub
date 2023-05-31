@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.session.web.http.CookieSerializer;
@@ -48,7 +49,8 @@ public class SessionConfig {
 
     @Bean
     public RedisSerializer<Object> springSessionDefaultRedisSerializer(){
-        return new MyGenericFastJsonRedisSerializer();
+        return new GenericJackson2JsonRedisSerializer();
+//        return new MyGenericFastJsonRedisSerializer();
     }
 
     public class MyGenericFastJsonRedisSerializer extends GenericFastJsonRedisSerializer{

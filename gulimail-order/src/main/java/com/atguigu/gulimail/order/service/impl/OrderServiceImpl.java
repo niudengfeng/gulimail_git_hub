@@ -2,6 +2,7 @@ package com.atguigu.gulimail.order.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson.JSON;
+import com.atguigu.common.constants.MqConstants;
 import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.utils.RedisConstants;
@@ -22,6 +23,8 @@ import com.atguigu.gulimail.order.vo.OrderVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 //import io.seata.spring.annotation.GlobalTransactional;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -68,6 +71,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private ProductFeign productFeign;
     @Autowired
     private OrderItemService orderItemService;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -134,9 +139,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     //锁定成功
                     responseVo.setOrder(order);
                     responseVo.setCode(0);
-                    //模拟错误，看能否回滚库存服务里面的事务
-//                    int a = 10/0;
-                    //7.远程减积分
+                    //模拟错误，看能否回滚库存服务里面的事务int a = 10/0;
+                    //到这里是真的订单创建全部成功了，需要发个消息给mq 延时半小时处理，如果未付款，直接关闭订单
+                    rabbitTemplate.convertAndSend(MqConstants.orderEventExchange,
+                            "order.create."+order.getOrderSn(),order,
+                            new CorrelationData(order.getOrderSn()));
                     return responseVo;
                 }else {
                     //锁定库存失败

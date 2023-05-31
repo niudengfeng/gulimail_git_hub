@@ -73,4 +73,15 @@ public class MqOrderCreateOrderConfig {
                 MqConstants.orderEventExchange,MqConstants.orderCreateOrderRoutingKey,null);
         return binding;
     }
+
+    /**
+     * 关闭订单和库存服务的死性队列绑定
+     * @return
+     */
+    @Bean
+    public Binding orderCloseStockReleaseBinding(){
+        Binding binding = new Binding(MqConstants.stockReleaseQueue, Binding.DestinationType.QUEUE,
+                MqConstants.orderEventExchange,MqConstants.orderCloseRoutingKey,null);
+        return binding;
+    }
 }

@@ -14,9 +14,13 @@ public class MqConstants {
     //死性队列
     public static final String orderReleaseQueue = "order-release-queue";
     //进入延时的创建订单的routingKey
-    public static final String orderCreateOrderRoutingKey = "order-create-order";
+    public static final String orderCreateOrderRoutingKey = "order.create.#";
     //释放的routingKey
-    public static final String orderReleaseOrderRoutingKey = "order-release-order";
+    public static final String orderReleaseOrderRoutingKey = "order.release.#";
+    //订单服务主动关闭订单准备通知库存服务的延迟任务routingKey
+    public static final String orderCloseRoutingKeyPrefix = "order.close.";
+    //订单服务的交换机和库存服务的死性队列绑定routingKey
+    public static final String orderCloseRoutingKey = "order.close.#";
 
 
     /**

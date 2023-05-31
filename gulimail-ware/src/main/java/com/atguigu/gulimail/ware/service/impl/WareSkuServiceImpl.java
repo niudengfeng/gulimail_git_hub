@@ -12,6 +12,7 @@ import com.atguigu.gulimail.ware.service.WareOrderTaskDetailService;
 import com.atguigu.gulimail.ware.service.WareOrderTaskService;
 import com.atguigu.gulimail.ware.service.feign.ProductFeignService;
 import com.atguigu.gulimail.ware.vo.SkuHasStockWareVo;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -167,7 +168,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
                     stockLockedTo.setTaskId(task.getId());
                     stockLockedTo.setTaskDetailId(taskDetail.getId());
                     //TODO 锁定成功，发送消息通知MQ,让他去检查这个sku对应订单是否正常，不正常需要回滚
-                    rabbitTemplate.convertAndSend(MqConstants.stockEventExchange,MqConstants.stockLockRoutingKey,stockLockedTo);
+                    rabbitTemplate.convertAndSend(MqConstants.stockEventExchange,MqConstants.stockLockRoutingKey,stockLockedTo,new CorrelationData(taskDetail.getId().toString()));
                     break;
                 }
                 //继续去下一个仓库锁定

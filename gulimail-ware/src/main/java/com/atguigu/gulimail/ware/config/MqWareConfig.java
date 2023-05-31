@@ -14,11 +14,6 @@ import java.util.HashMap;
 @Configuration
 public class MqWareConfig {
 
-    @RabbitListener(queues = MqConstants.stockReleaseQueue)
-    public void re(){
-
-    }
-
     /**
      * 延时队列
      * @return

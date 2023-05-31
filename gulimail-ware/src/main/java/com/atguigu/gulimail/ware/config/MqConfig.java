@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.ware.config;
 
+import cn.hutool.core.date.DateUtil;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -38,7 +39,7 @@ public class MqConfig {
          *      *  cause 失败的原因
          */
         rabbitTemplate.setConfirmCallback((correlationData , ack, cause)->{
-            System.out.println("发送消息确认：correlationData【"+correlationData+"】,ack["+ack+"] cause:"+cause);
+            System.out.println(DateUtil.now() +"发送消息确认：correlationData【"+correlationData+"】,ack["+ack+"] cause:"+cause);
         });
 
         /**
