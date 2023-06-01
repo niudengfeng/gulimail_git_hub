@@ -11,6 +11,7 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimail.coupon.dao.SeckillSkuRelationDao;
 import com.atguigu.gulimail.coupon.entity.SeckillSkuRelationEntity;
 import com.atguigu.gulimail.coupon.service.SeckillSkuRelationService;
+import org.springframework.util.StringUtils;
 
 
 @Service("seckillSkuRelationService")
@@ -18,11 +19,17 @@ public class SeckillSkuRelationServiceImpl extends ServiceImpl<SeckillSkuRelatio
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
+        QueryWrapper<SeckillSkuRelationEntity> q = new QueryWrapper<>();
+        //场次ID不为空
+        Object promotionSessionId = params.get("promotionSessionId");
+        if (!StringUtils.isEmpty(promotionSessionId)){
+            q.eq("promotion_session_id",promotionSessionId);
+        }
+        q.orderByDesc("id");
         IPage<SeckillSkuRelationEntity> page = this.page(
                 new Query<SeckillSkuRelationEntity>().getPage(params),
-                new QueryWrapper<SeckillSkuRelationEntity>()
+                q
         );
-
         return new PageUtils(page);
     }
 

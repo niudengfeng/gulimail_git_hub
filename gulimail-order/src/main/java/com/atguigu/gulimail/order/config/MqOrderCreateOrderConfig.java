@@ -5,6 +5,7 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Exchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +13,9 @@ import java.util.HashMap;
 
 @Configuration
 public class MqOrderCreateOrderConfig {
+
+    @Value("${order.close.timeout}")
+    private String timeout;
 
     /**
      * 延时队列
@@ -23,7 +27,7 @@ public class MqOrderCreateOrderConfig {
         HashMap<String, Object> arg = new HashMap<>();
         arg.put("x-dead-letter-exchange", MqConstants.orderEventExchange);//指定死性交换机
         arg.put("x-dead-letter-routing-key",MqConstants.orderReleaseOrderRoutingKey);//指定死性routingkey,过期后回传给交换机以这个routingKey
-        arg.put("x-message-ttl",60*1000);//毫秒 1分钟
+        arg.put("x-message-ttl",Integer.valueOf(timeout)*60*1000);//毫秒 N分钟后直接关闭订单,配置化
         Queue queue = new Queue(MqConstants.orderDelayQueue,true,false,false,arg);
         return queue;
     }

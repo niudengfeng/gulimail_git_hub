@@ -1,7 +1,7 @@
 package com.atguigu.gulimail.member.controller;
 
 import com.atguigu.common.utils.R;
-import com.atguigu.gulimail.member.service.FeignCouponApi;
+import com.atguigu.gulimail.member.feign.FeignCouponApi;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 

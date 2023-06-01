@@ -6,6 +6,7 @@ import org.springframework.amqp.core.Exchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,6 +14,9 @@ import java.util.HashMap;
 
 @Configuration
 public class MqWareConfig {
+
+    @Value("${stock.check.limit}")
+    private String limit;
 
     /**
      * 延时队列
@@ -23,7 +27,7 @@ public class MqWareConfig {
         HashMap<String, Object> arg = new HashMap<>();
         arg.put("x-dead-letter-exchange", MqConstants.stockEventExchange);//指定死性交换机
         arg.put("x-dead-letter-routing-key",MqConstants.stockReleaseRoutingKey);//指定死性routingkey,过期后回传给交换机以这个routingKey
-        arg.put("x-message-ttl",120*1000);//毫秒 2分钟
+        arg.put("x-message-ttl",Integer.valueOf(limit)*60*1000);//毫秒 2分钟后检查库存工作单，如果检查到对应订单关闭需要解锁冻结的库存
         Queue queue = new Queue(MqConstants.stockDelayQueue,true,false,false,arg);
         return queue;
     }

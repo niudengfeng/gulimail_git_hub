@@ -1,7 +1,11 @@
 package com.atguigu.gulimail.order.mq;
 
 import cn.hutool.core.date.DateUtil;
+import com.alipay.api.AlipayApiException;
+import com.alipay.api.AlipayClient;
+import com.alipay.api.request.AlipayTradeCloseRequest;
 import com.atguigu.common.constants.MqConstants;
+import com.atguigu.gulimail.order.config.AlipayClientConfig;
 import com.atguigu.gulimail.order.entity.OrderEntity;
 import com.atguigu.gulimail.order.service.OrderService;
 import com.atguigu.common.vo.OrderVo;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 @Slf4j
@@ -29,13 +34,19 @@ public class MqConsumer {
     private OrderService orderService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
-
+    @Autowired
+    private AlipayClientConfig alipayClientConfig;
+    @Autowired
+    private AlipayClient alipayClient;
     @RabbitListener(queues = {MqConstants.orderReleaseQueue})
     @Transactional
     public void listen(Message message, OrderEntity order, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) throws IOException {
-        System.out.println("当前时间："+ DateUtil.now()+"收到延时订单消息时间："+ DateUtil.format(order.getModifyTime(),"yyyy-MM-dd HH:mm:ss")+"======>"+order);
+        System.out.println("关闭订单："+order.getOrderSn()+"当前时间："+ DateUtil.now()+"收到延时订单消息时间："+ DateUtil.format(order.getModifyTime(),"yyyy-MM-dd HH:mm:ss")+"======>"+order);
         try {
             closeOrder(order);
+            //关闭订单后立马调用支付宝的关闭订单接口，防止用户支付成功了。
+//            closeAlipayOrder(order);
+
             //系统设置了手动确认消息
             channel.basicAck(deliveryTag,false);
         } catch (Exception e) {
@@ -44,6 +55,23 @@ public class MqConsumer {
             throw new RuntimeException(e);
         }
     }
+
+ /*   private void closeAlipayOrder(OrderEntity order) throws AlipayApiException, UnsupportedEncodingException {
+        //获得初始化的AlipayClient
+
+        //设置请求参数
+        AlipayTradeCloseRequest alipayRequest = new AlipayTradeCloseRequest();
+        //商户订单号，商户网站订单系统中唯一订单号
+        String out_trade_no = new String(order.getOrderSn().getBytes("ISO-8859-1"),"UTF-8");
+        //支付宝交易号
+        String trade_no = new String(request.getParameter("WIDTCtrade_no").getBytes("ISO-8859-1"),"UTF-8");
+        //请二选一设置
+        alipayRequest.setBizContent("{\"out_trade_no\":\""+ out_trade_no +"\"," +"\"trade_no\":\""+ trade_no +"\"}");
+        //请求
+        String result = alipayClient.execute(alipayRequest).getBody();
+        log.info("收到支付宝关闭订单响应："+result);
+    }*/
+
 
     public void closeOrder(OrderEntity order) throws InterruptedException {
         OrderEntity byId = orderService.getById(order.getId());
@@ -61,9 +89,9 @@ public class MqConsumer {
              *          场景1.现在订单1分钟后关闭，紧接着发送库存解锁消息，库存那边处理完，过了接1分钟，处理库存服务自己发送的任务单消息，
              *          场景2：订单1分钟后关闭，睡眠2分钟，发送库存解锁消息，过了1分钟，库存服务延时队列消费结束了，最后订单服务关闭消息发送过来，监听到此消息，去处理，后于库存消费
              */
-            Thread.sleep(2*60*1000);//模拟场景2
+//            Thread.sleep(2*60*1000);//模拟场景2
             rabbitTemplate.convertAndSend(MqConstants.orderEventExchange,MqConstants.orderCloseRoutingKeyPrefix+order.getOrderSn()
-            ,orderVo,new CorrelationData(byId.getOrderSn()));
+                    ,orderVo,new CorrelationData(byId.getOrderSn()));
         }
     }
 

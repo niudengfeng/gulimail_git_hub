@@ -70,15 +70,12 @@ public class ConsumerStockComment {
                 if (r.getCode() == 0){
                     Object o = r.get("order");
                     OrderVo orderVo = JSON.parseObject(JSON.toJSONString(o), OrderVo.class);
-                    if (orderVo!=null && orderVo.getStatus() != 4){
-                        //订单存在并且不是无效订单，无需解锁
-                        deLock(detail,3);//扣减
-                    }else {
+                    if (orderVo==null || orderVo.getStatus() == 4){
                         //订单不存在或者已取消订单，需要回滚库存，然后消费掉
                         if (detail.getLockStatus() == 1){
                             unLockStock(detail);
                         }
-                        deLock(detail,2);//解锁
+                        deLock(detail);//解锁
                     }
                     channel.basicAck(deliveryTag,false);
                 }else {
@@ -89,7 +86,7 @@ public class ConsumerStockComment {
             }else {
                 //锁定库存失败了，无需处理,消费掉这条消息，手动确认
                 channel.basicAck(deliveryTag,false);
-                deLock(detail,2);
+                deLock(detail);
             }
         } catch (Exception e) {
             //业务处理失败了，需要重回队列
@@ -118,7 +115,7 @@ public class ConsumerStockComment {
             if (!CollectionUtils.isEmpty(detailEntities)){
                 for (WareOrderTaskDetailEntity detailEntity : detailEntities) {
                     unLockStock(detailEntity);//回滚库存
-                    deLock(detailEntity,2);//工作单详情锁定状态值为解锁了代表库存解锁了
+                    deLock(detailEntity);//工作单详情锁定状态值为解锁了代表库存解锁了
                 }
             }
             channel.basicAck(deliveryTag,false);
@@ -140,8 +137,8 @@ public class ConsumerStockComment {
      * 正常情况，需要更改taskDetail的扣减状态
      * @param detail
      */
-    private void deLock(WareOrderTaskDetailEntity detail,Integer status){
-        detail.setLockStatus(status);
+    private void deLock(WareOrderTaskDetailEntity detail){
+        detail.setLockStatus(2);
         detailService.updateById(detail);
     }
 }

@@ -8,19 +8,20 @@ import com.atguigu.common.utils.R;
 import com.atguigu.common.utils.RedisConstants;
 import com.atguigu.common.vo.*;
 import com.atguigu.gulimail.order.entity.OrderItemEntity;
+import com.atguigu.gulimail.order.entity.PaymentInfoEntity;
 import com.atguigu.gulimail.order.enume.OrderStatusEnum;
 import com.atguigu.gulimail.order.feign.ProductFeign;
 import com.atguigu.gulimail.order.service.OrderItemService;
+import com.atguigu.gulimail.order.service.PaymentInfoService;
 import com.atguigu.gulimail.order.to.OrderResponseTo;
-import com.atguigu.gulimail.order.vo.SpuInfoVo;
-import com.atguigu.gulimail.order.vo.SubmitOrderResponseVo;
+import com.atguigu.gulimail.order.vo.*;
 import com.atguigu.gulimail.order.feign.CartFeign;
 import com.atguigu.gulimail.order.feign.MemberFeign;
 import com.atguigu.gulimail.order.feign.WareFeign;
 import com.atguigu.gulimail.order.interceptor.LoginUserInterCeptor;
-import com.atguigu.gulimail.order.vo.CartItem;
 import com.atguigu.gulimail.order.vo.OrderVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 //import io.seata.spring.annotation.GlobalTransactional;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
@@ -73,6 +74,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private OrderItemService orderItemService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private PaymentInfoService paymentInfoService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -172,6 +175,50 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             return null;
         }else {
             return orderEntities.get(0);
+        }
+    }
+
+    @Override
+    public PageUtils getOrderPage(Map<String, Object> params) {
+        MemberVO memberVO = LoginUserInterCeptor.threadLocal.get();
+        IPage<OrderEntity> page = this.page(
+                new Query<OrderEntity>().getPage(params),
+                new QueryWrapper<OrderEntity>().eq("member_id",memberVO.getId()).orderByDesc("id")
+        );
+
+        for (OrderEntity record : page.getRecords()) {
+            QueryWrapper<OrderItemEntity> orderItemEntityQueryWrapper = new QueryWrapper<>();
+            orderItemEntityQueryWrapper.eq("order_sn",record.getOrderSn());
+            orderItemEntityQueryWrapper.orderByDesc("id");
+            record.setOrderItemEntityList(orderItemService.getBaseMapper().selectList(orderItemEntityQueryWrapper));
+        }
+
+        return new PageUtils(page);
+    }
+
+    @Override
+    public void dealAlipayNotify(PayAsyncVo vo) {
+
+        String orderSn = vo.getOut_trade_no();
+        String tradeStatus = vo.getTrade_status();
+        if (tradeStatus.equals("TRADE_SUCCESS") || tradeStatus.equals("TRADE_FINISHED")){
+            //订单支付成功 保存回调记录
+            PaymentInfoEntity paymentInfoEntity = new PaymentInfoEntity();
+            paymentInfoEntity.setOrderSn(orderSn);
+            paymentInfoEntity.setCreateTime(new Date());
+            paymentInfoEntity.setAlipayTradeNo(vo.getTrade_no());
+            paymentInfoEntity.setTotalAmount(new BigDecimal(vo.getTotal_amount()));
+            paymentInfoEntity.setPaymentStatus(vo.getTrade_status());
+            paymentInfoEntity.setCallbackTime(vo.getNotify_time());
+            paymentInfoEntity.setCallbackContent(vo.getBody());
+            paymentInfoEntity.setSubject(vo.getSubject());
+            paymentInfoService.save(paymentInfoEntity);
+            //修改订单状态
+            UpdateWrapper<OrderEntity> orderEntityUpdateWrapper = new UpdateWrapper<>();
+            orderEntityUpdateWrapper.eq("order_sn",orderSn);
+            orderEntityUpdateWrapper.set("status",OrderStatusEnum.PAYED.getCode());
+            orderEntityUpdateWrapper.set("modify_time",new Date());
+            this.update(orderEntityUpdateWrapper);
         }
     }
 

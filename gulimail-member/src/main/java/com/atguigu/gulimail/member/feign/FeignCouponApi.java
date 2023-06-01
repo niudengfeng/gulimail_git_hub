@@ -1,4 +1,4 @@
-package com.atguigu.gulimail.member.service;
+package com.atguigu.gulimail.member.feign;
 
 import com.atguigu.common.utils.R;
 import org.springframework.cloud.openfeign.FeignClient;

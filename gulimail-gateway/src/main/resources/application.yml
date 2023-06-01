@@ -60,6 +60,10 @@ spring:
           filters:
             - RewritePath=/api/?(?<segment>.*), /renren-fast/$\{segment}
 
+        - id: order-ali-notify-route
+          uri: lb://gulimail-order
+          predicates:
+            - Path=/alipay/notify
 
         - id: product-thmleaf-route
           uri: lb://gulimail-product

@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Slf4j
 @Controller
@@ -38,9 +40,11 @@ public class AlipayController {
     private String notifyUrl;
     @Value("${ali.pay.returnUrl}")
     private String returnUrl;
+    @Value("${ali.pay.timeout}")
+    private String alipayTimeOut;
 
     @ResponseBody
-    @GetMapping(value = "/go" , produces = {"text/html"})
+    @GetMapping(value = "/go" , produces = {MediaType.TEXT_HTML_VALUE})//produces = "text/html"这样写是不行的
     public String alipay(@RequestParam("orderSn") String orderSn) throws AlipayApiException {
         AlipayTradePagePayRequest request = new AlipayTradePagePayRequest();
         OrderEntity orderStatus = orderService.getOrderStatus(orderSn);
@@ -57,19 +61,19 @@ public class AlipayController {
         //商户订单号，商家自定义，保持唯一性
         bizContent.put("out_trade_no", orderSn);
         //支付金额，最小值0.01元
-        bizContent.put("total_amount", payAmount);
+        bizContent.put("total_amount", payAmount.setScale(2, RoundingMode.HALF_UP));
         //订单标题，不可使用特殊符号
         bizContent.put("subject", skuName);
         //电脑网站支付场景固定传值FAST_INSTANT_TRADE_PAY
         bizContent.put("product_code", "FAST_INSTANT_TRADE_PAY");
+        bizContent.put("timeout_express", alipayTimeOut);
 
         request.setBizContent(bizContent.toString());
         AlipayTradePagePayResponse response = alipayClient.pageExecute(request);
         if (response.isSuccess()) {
             System.out.println("调用成功");
-            String jsonString = JSON.toJSONString(response);
-            log.info("返回消息:"+jsonString);
             String body = response.getBody();
+            log.info("返回消息:"+body);
             return body;
         } else {
             System.out.println("调用失败");

@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.order.service;
 
+import com.atguigu.gulimail.order.vo.PayAsyncVo;
 import com.atguigu.gulimail.order.vo.SubmitOrderResponseVo;
 import com.atguigu.common.vo.SubmitOrderVo;
 import com.atguigu.gulimail.order.vo.OrderVo;
@@ -25,5 +26,9 @@ public interface OrderService extends IService<OrderEntity> {
     SubmitOrderResponseVo createOrder(SubmitOrderVo submitOrderVo);
 
     OrderEntity getOrderStatus(String orderSn);
+
+    PageUtils getOrderPage(Map<String, Object> params);
+
+    void dealAlipayNotify(PayAsyncVo vo);
 }
 

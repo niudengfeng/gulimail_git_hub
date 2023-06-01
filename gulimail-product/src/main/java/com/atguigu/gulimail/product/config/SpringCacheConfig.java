@@ -24,7 +24,7 @@ public class SpringCacheConfig {
         //设置kv的序列化
         config = config.serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()));//string  key
         //设置value是json序列化
-        config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericFastJsonRedisSerializer()));
+        config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
         //设置ttl过期时间
         if (redisProperties.getTimeToLive() != null) {
