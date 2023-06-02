@@ -1,14 +1,13 @@
 package com.atguigu.gulimail.coupon.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import com.atguigu.common.vo.SeckillSessionRedisTo;
+import com.atguigu.gulimail.coupon.entity.SeckillSessionEntity;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimail.coupon.entity.SeckillSkuRelationEntity;
 import com.atguigu.gulimail.coupon.service.SeckillSkuRelationService;
@@ -41,6 +40,15 @@ public class SeckillSkuRelationController {
         return R.ok().put("page", page);
     }
 
+
+    /**
+     * 查询最近三天内的秒杀商品
+     */
+    @GetMapping("/getSeckillProductCurrentThreeDays")
+    public R getSeckillProductCurrentThreeDays(){
+        List<SeckillSessionRedisTo> seckillSessionEntities = seckillSkuRelationService.getSeckillProductCurrentThreeDays();
+        return R.ok().put("data",seckillSessionEntities);
+    }
 
     /**
      * 信息

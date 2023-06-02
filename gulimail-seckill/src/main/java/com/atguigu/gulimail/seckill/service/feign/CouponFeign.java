@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @FeignClient(value = "gulimail-coupon")
 public interface CouponFeign {
 
-    @GetMapping("/coupon/seckillsession/getSeckillProductCurrentThreeDays")
-    R getSeckillProductCurrentThreeDays();
-
-
+    @GetMapping("/coupon/seckillskurelation/getSeckillProductCurrentThreeDays")
+    public R getSeckillProductCurrentThreeDays();
 }

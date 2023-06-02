@@ -53,6 +53,13 @@ spring:
           filters:
             - RewritePath=/api/order/?(?<segment>.*), /order/$\{segment}
 
+        - id: seckill-route
+          uri: lb://gulimail-seckill
+          predicates:
+            - Path=/api/seckill/**
+          filters:
+            - RewritePath=/api/seckill/?(?<segment>.*), /seckill/$\{segment}
+
         - id: amdin-route
           uri: lb://renren-fast
           predicates:

@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.product.vo;
 
+import com.atguigu.common.vo.SeckillSkuRelationRedisTo;
 import com.atguigu.gulimail.product.entity.SkuImagesEntity;
 import com.atguigu.gulimail.product.entity.SkuInfoEntity;
 import com.atguigu.gulimail.product.entity.SpuInfoDescEntity;
@@ -21,6 +22,10 @@ public class SkuItemVo {
     private List<SpuAttrGroupVo> spuAttrGroupVos;
     //6.是否有货
     private boolean hasStock = true;
+    //7.秒杀
+    private SeckillSkuRelationRedisTo seckillSkuRelationRedisTo;
+    //8.是否在范围内1代表还没开始秒杀 0代表已经开始秒杀了
+    private int flag;
 
     @Data
     public static class SpuAttrGroupVo{

@@ -108,6 +108,7 @@ public class TestRedissonLock {
 
 
     /**
+     * 信号量-释放
      * 模拟停车位
      * 车开走，释放一个停车位
      * @return
@@ -115,6 +116,7 @@ public class TestRedissonLock {
     @GetMapping("/go")
     public String go(){
         RSemaphore semaphoreLock = redissonClient.getSemaphore("SemaphoreLock");
+        semaphoreLock.trySetPermits(10);//假如设置10个车位
         try {
             semaphoreLock.release();
         } catch (Exception e) {
@@ -123,7 +125,7 @@ public class TestRedissonLock {
     }
 
     /**
-     * 信号量
+     * 信号量-占位
      * 也可以作为分布式限流方案
      * 模拟停车
      * @return

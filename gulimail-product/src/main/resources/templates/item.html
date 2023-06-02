@@ -15,7 +15,7 @@
 		<!--品牌官方网站-->
 		<div class="min">
 			<ul class="header_ul_left">
-				<li class="glyphicon glyphicon-home"> <a href="/static/item/shouye.html" class="aa">京东首页</a></li>
+				<li class="glyphicon glyphicon-home"> <a href="http://gulimail.com" class="aa">京东首页</a></li>
 				<li class="glyphicon glyphicon-map-marker"> <a href="/static/item/javascript:;">北京</a>
 					<ol id="beijing">
 						<li style="background: red;"><a href="/static/item/javascript:;" style="color: white;">北京</a></li>
@@ -506,8 +506,14 @@
 							<span>￥</span>
 							<span th:text="${#numbers.formatDecimal(skuItemVo.skuInfo.price,1,2)}">4499.00</span>
 						</li>
-						<li>
-							预约享资格
+						<li style="color: red" th:if="${skuItemVo.seckillSkuRelationRedisTo!=null}">
+							<span th:if="${skuItemVo.flag==1}">
+								商品将会在[[${#dates.format(new java.util.Date(skuItemVo.seckillSkuRelationRedisTo.startTime),'yyyy-MM-dd HH:mm:ss')}]]开始秒杀
+							</span>
+							<span th:if="${skuItemVo.flag==0}">
+								秒杀价[[${#numbers.formatDecimal(skuItemVo.seckillSkuRelationRedisTo.seckillPrice,1,2)}]]
+							</span>
+
 						</li>
 						<li>
 							<a href="/static/item/">

@@ -12,4 +12,13 @@ public class RedisConstants {
 
     public static final int SESSION_USER_KEY_TIMEOUT = 30*24*60*60;//30天
 
+    //秒杀活动场次
+    public static final String SECKILL_RELATION_ID_KEY = "seckill:relationIds:";
+    //秒杀活动详细信息前缀
+    public static final String SECKILL_RELATION_INFO_KEY = "seckill:skus:";
+    //秒杀商品的信号量key
+    public static final String SECKILL_SEMAPHORE_KEY = "seckill:Semaphore:";
+    //秒杀商品的定时任务分布式锁KEY
+    public static final String SECKILL_LOCK = "seckill:task:lock";
+
 }

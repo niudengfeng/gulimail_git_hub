@@ -1,5 +1,8 @@
 package com.atguigu.gulimail.product.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.SeckillSkuRelationRedisTo;
 import com.atguigu.gulimail.product.config.ThreadPoolConfig;
 import com.atguigu.gulimail.product.dao.ProductAttrValueDao;
 import com.atguigu.gulimail.product.entity.SkuImagesEntity;
@@ -7,6 +10,7 @@ import com.atguigu.gulimail.product.entity.SpuInfoDescEntity;
 import com.atguigu.gulimail.product.service.SkuImagesService;
 import com.atguigu.gulimail.product.service.SkuSaleAttrValueService;
 import com.atguigu.gulimail.product.service.SpuInfoDescService;
+import com.atguigu.gulimail.product.service.feign.FeignSeckillService;
 import com.atguigu.gulimail.product.vo.SkuItemVo;
 import com.atguigu.gulimail.product.vo.SpuAttrVo;
 import com.atguigu.gulimail.product.vo.SpuSalesVo;
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -51,6 +56,8 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
     private ProductAttrValueDao productAttrValueDao;
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
+    @Autowired
+    private FeignSeckillService feignSeckillService;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         /**
@@ -150,8 +157,25 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
             vo.setSpuAttrGroupVos(attrGroupVos);
         }, threadPoolExecutor);
 
+        //6.查询当前商品是否有秒杀活动
+        CompletableFuture<Void> seckillFuture = CompletableFuture.runAsync(() -> {
+            R skuInfo = feignSeckillService.getSkuInfo(skuId);
+            if (skuInfo.getCode() == 0){
+                Object o = skuInfo.get("sku");
+                SeckillSkuRelationRedisTo seckillSkuRelationRedisTo = JSON.parseObject(JSON.toJSONString(o), SeckillSkuRelationRedisTo.class);
+                long startTime = seckillSkuRelationRedisTo.getStartTime();
+                long time = new Date().getTime();
+                if (time<startTime){
+                    vo.setFlag(1);
+                }else {
+                    vo.setFlag(0);
+                }
+                vo.setSeckillSkuRelationRedisTo(seckillSkuRelationRedisTo);
+            }
+        }, threadPoolExecutor);
+
         //等上面所有任务都执行完成在返回
-        CompletableFuture.allOf(imgFuture,saleAttrFuture,descFuture,attrgroupFuture).get();
+        CompletableFuture.allOf(imgFuture,saleAttrFuture,descFuture,attrgroupFuture,seckillFuture).get();
         return vo;
     }
 }

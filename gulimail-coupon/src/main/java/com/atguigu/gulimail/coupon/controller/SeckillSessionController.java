@@ -30,11 +30,11 @@ public class SeckillSessionController {
     /**
      * 查询最近三天内的秒杀商品
      */
-    @GetMapping("/getSeckillProductCurrentThreeDays")
+ /*   @GetMapping("/getSeckillProductCurrentThreeDays")
     public R getSeckillProductCurrentThreeDays(){
         List<SeckillSessionEntity> seckillSessionEntities = seckillSessionService.getSeckillProductCurrentThreeDays();
         return R.ok().put("data",seckillSessionEntities);
-    }
+    }*/
 
     /**
      * 列表
