@@ -163,14 +163,16 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
             if (skuInfo.getCode() == 0){
                 Object o = skuInfo.get("sku");
                 SeckillSkuRelationRedisTo seckillSkuRelationRedisTo = JSON.parseObject(JSON.toJSONString(o), SeckillSkuRelationRedisTo.class);
-                long startTime = seckillSkuRelationRedisTo.getStartTime();
-                long time = new Date().getTime();
-                if (time<startTime){
-                    vo.setFlag(1);
-                }else {
-                    vo.setFlag(0);
+                if(seckillSkuRelationRedisTo!=null){
+                    long startTime = seckillSkuRelationRedisTo.getStartTime();
+                    long time = new Date().getTime();
+                    if (time<startTime){
+                        vo.setFlag(1);
+                    }else {
+                        vo.setFlag(0);
+                    }
+                    vo.setSeckillSkuRelationRedisTo(seckillSkuRelationRedisTo);
                 }
-                vo.setSeckillSkuRelationRedisTo(seckillSkuRelationRedisTo);
             }
         }, threadPoolExecutor);
 

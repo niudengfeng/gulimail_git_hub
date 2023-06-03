@@ -84,6 +84,7 @@
 <!--			<groupId>org.springframework.boot</groupId>-->
 <!--			<artifactId>spring-boot-starter-data-redis</artifactId>-->
 <!--		</dependency>-->
+		<!--        引入redis,防止内存泄露问题所以需要排除lettuce客户端,用jedis客户端操作redis;-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>

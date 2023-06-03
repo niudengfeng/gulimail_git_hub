@@ -3,6 +3,7 @@ package com.atguigu.common.vo;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
  * @date 2021-03-23 15:04:26
  */
 @Data
+@ToString
 public class SeckillSkuRelationRedisTo implements Serializable {
 	private static final long serialVersionUID = 1L;
 

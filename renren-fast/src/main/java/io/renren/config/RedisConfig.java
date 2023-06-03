@@ -20,9 +20,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *
  * @author Mark sunlightcs@gmail.com
  */
-@Configuration
+//@Configuration
 public class RedisConfig {
-    @Autowired
+//    @Autowired
     private RedisConnectionFactory factory;
 
     @Bean

@@ -6,30 +6,27 @@ import com.atguigu.common.vo.MemberVO;
 import com.atguigu.common.vo.SeckillSkuRelationRedisTo;
 import com.atguigu.gulimail.seckill.service.SeckillService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
-@RequestMapping("/seckill")
-@RestController
-public class SeckillController {
+@RequestMapping("/seckill/kill")
+@Controller
+public class SeckillSkuController {
 
     @Autowired
     private SeckillService seckillService;
 
-    @GetMapping("/getCurrentSkus")
-    public R getCurrentSkus(Model model){
-        List<SeckillSkuRelationRedisTo> skus = seckillService.getCurrentSkus();
-        model.addAttribute("skus",skus);
-        return R.ok().put("skus",skus);
-    }
-
-    @GetMapping("/getSkuInfo/{skuId}")
-    public R getSkuInfo(@PathVariable("skuId") Long skuId){
-        SeckillSkuRelationRedisTo sku = seckillService.getSkuInfoBySkuId(skuId);
-        return R.ok().put("sku",sku);
+    @GetMapping("/order")
+    public String kill(@RequestParam("skuId_promotionSessionId") String skuId_promotionSessionId,
+                  @RequestParam("token") String token,
+                  @RequestParam("count") String count,Model model){
+        String orderSn = seckillService.kill(skuId_promotionSessionId,token,count);
+        model.addAttribute("orderSn",orderSn);
+        return "success";
     }
 
 }

@@ -25,7 +25,7 @@ public class SkuItemVo {
     //7.秒杀
     private SeckillSkuRelationRedisTo seckillSkuRelationRedisTo;
     //8.是否在范围内1代表还没开始秒杀 0代表已经开始秒杀了
-    private int flag;
+    private int flag = 1;
 
     @Data
     public static class SpuAttrGroupVo{

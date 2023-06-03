@@ -9,4 +9,6 @@ public interface SeckillService {
     List<SeckillSkuRelationRedisTo> getCurrentSkus();
 
     public SeckillSkuRelationRedisTo getSkuInfoBySkuId(Long skuId);
+
+    String kill(String skuIdPromotionSessionId, String token, String count);
 }

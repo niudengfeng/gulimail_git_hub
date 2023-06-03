@@ -21,8 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -66,7 +68,12 @@ public class UpSeckillProductServiceImpl implements UpSeckillProductService {
                 String key = RedisConstants.SECKILL_RELATION_ID_KEY+seckillSessionRedisTo.getStartTime().getTime()+"-"+seckillSessionRedisTo.getEndTime().getTime();
                 if (! redisTemplate.hasKey(key)){//先检查这个KEY是否已经存在了。防止重复入库
                     List<String> collect = seckillSessionRedisTo.getRelationRedisTos().stream().map(d -> d.getPromotionSessionId()+"_"+d.getSkuId().toString()).collect(Collectors.toList());
+                    //场次ID—SKUID：设置过期时间
+                    long endTime = seckillSessionRedisTo.getEndTime().getTime();
+                    long curr = new Date().getTime();
+                    long ttl = endTime-curr;
                     redisTemplate.opsForList().leftPushAll(key,collect);
+                    redisTemplate.opsForList().getOperations().expire(key,ttl,TimeUnit.MILLISECONDS);
                 }
             }
         }
@@ -94,13 +101,19 @@ public class UpSeckillProductServiceImpl implements UpSeckillProductService {
                             String hk = m.getPromotionSessionId() + "_" + skuId.toString();
                             //先判断当前场次对应的商品是否已经上架过了
                             if (!hashOps.hasKey(hk)){
+                                long endTime = datum.getEndTime().getTime();
+                                long curr = new Date().getTime();
+                                long ttl = endTime-curr;
+                                hashOps.expire(ttl,TimeUnit.MILLISECONDS);
                                 hashOps.put(hk,JSON.toJSONString(m));
                                 //5.引入分布式信号量，为秒杀限流。
                                 //5.1 每个商品的token作为信号量的key
                                 String key = RedisConstants.SECKILL_SEMAPHORE_KEY+ m.getToken();
                                 RSemaphore semaphore = redissonClient.getSemaphore(key);
-                                //5.2每个上架的秒杀商品对应总数量作为信号量限流量
+                                //5.2每个上架的秒杀商品对应总数量作为信号量限流量 取消订单释放，创建订单占用
                                 semaphore.trySetPermits(m.getSeckillCount().intValue());
+                                //设置信号量的过期时间
+                                semaphore.expire(ttl,TimeUnit.MILLISECONDS);
                             }
                         }
                     }

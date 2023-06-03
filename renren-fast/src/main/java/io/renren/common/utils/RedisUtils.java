@@ -20,10 +20,10 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Mark sunlightcs@gmail.com
  */
-@Component
+//@Component
 public class RedisUtils {
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private StringRedisTemplate redisTemplate;
     @Autowired
     private ValueOperations<String, String> valueOperations;
     @Autowired

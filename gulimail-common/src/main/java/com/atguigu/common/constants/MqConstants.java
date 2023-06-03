@@ -37,4 +37,12 @@ public class MqConstants {
     //释放消息的解锁routingKey
     public static final String stockReleaseRoutingKey = "stock.release.#";
 
+
+    //秒杀队列
+    //交换机
+    public static final String seckillEventExchange = "seckill-event-exchange";
+    //队列
+    public static final String seckillQueue = "seckill-queue";
+    //routingKey
+    public static final String seckillRoutingKey = "seckill.#";
 }

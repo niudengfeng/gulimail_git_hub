@@ -33,7 +33,7 @@ public class SeckillProductPushTask {
     /**
      * todo 幂等性：不能一个商品重复上架到redis
      */
-    @Scheduled(cron = "0 0/5 * ? * *")
+    @Scheduled(cron = "0 0/1 * ? * *")
     public void upSeckillProduct(){
         log.info("开始跑批上架秒杀商品"+ DateUtil.now());
         //1.重复上架无需处理

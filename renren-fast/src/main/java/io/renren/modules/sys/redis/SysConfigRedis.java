@@ -9,10 +9,12 @@
 package io.renren.modules.sys.redis;
 
 
+import com.alibaba.fastjson.JSON;
 import io.renren.common.utils.RedisKeys;
 import io.renren.common.utils.RedisUtils;
 import io.renren.modules.sys.entity.SysConfigEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,14 +25,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class SysConfigRedis {
     @Autowired
-    private RedisUtils redisUtils;
+    private StringRedisTemplate redisUtils;
 
     public void saveOrUpdate(SysConfigEntity config) {
         if(config == null){
             return ;
         }
         String key = RedisKeys.getSysConfigKey(config.getParamKey());
-        redisUtils.set(key, config);
+        redisUtils.opsForValue().set(key, JSON.toJSONString(config));
     }
 
     public void delete(String configKey) {
@@ -40,6 +42,8 @@ public class SysConfigRedis {
 
     public SysConfigEntity get(String configKey){
         String key = RedisKeys.getSysConfigKey(configKey);
-        return redisUtils.get(key, SysConfigEntity.class);
+        String s = redisUtils.opsForValue().get(key);
+        SysConfigEntity sysConfigEntity = JSON.parseObject(s, SysConfigEntity.class);
+        return sysConfigEntity;
     }
 }

@@ -631,9 +631,16 @@
 
 						</div>
 					</div>
-					<div class="box-btns-two">
+					<div class="box-btns-two" th:if="${skuItemVo.flag==1}">
 						<a id="addCart" th:attr="skuId=${skuItemVo.skuInfo.skuId}">
 							加入购物车
+						</a>
+					</div>
+					<div class="box-btns-two" th:if="${skuItemVo.flag==0}">
+						<a id="addSeckill" th:attr="skuId=${skuItemVo.skuInfo.skuId}
+						,token=${skuItemVo.seckillSkuRelationRedisTo.token}
+						,promotionSessionId=${skuItemVo.seckillSkuRelationRedisTo.promotionSessionId}">
+							立即秒杀
 						</a>
 					</div>
 					<div class="box-btns-three">
@@ -1235,6 +1242,23 @@
 		location.href = "http://cart.gulimail.com/addToCart?skuId="+skuId+"&num="+num;
 		return false;
 	})
+
+	$('#addSeckill').click(function (){
+		var isLogin = [[${session.user!=null}]];
+		if (isLogin){
+			//代表登录
+			var skuId = $('#addSeckill').attr("skuId");
+			var token = $('#addSeckill').attr("token");
+			var promotionSessionId = $('#addSeckill').attr("promotionSessionId");skuId
+			var count = $('#num').val();
+			location.href = "http://seckill.gulimail.com/api/seckill/kill/order?skuId_promotionSessionId="+promotionSessionId+"_"+skuId+"&token="+token+"&count="+count;
+		}else{
+			alert("秒杀请先登录");
+			location.href = "http://auth.gulimail.com"
+		}
+		return false;
+	})
+
 </script>
 
 </html>
