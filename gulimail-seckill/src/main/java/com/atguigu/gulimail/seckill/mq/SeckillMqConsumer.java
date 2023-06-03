@@ -15,6 +15,8 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+
 @Slf4j
 @Component
 @RabbitListener(queues = {MqConstants.seckillQueue})
@@ -22,9 +24,21 @@ public class SeckillMqConsumer {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    /**
+     * TODO 创建订单和订单项
+     * @param message
+     * @param seckillOrderVo
+     * @param channel
+     * @param deliveryTag
+     */
     @RabbitHandler
     public void seckillOrderCreate(Message message, SeckillOrderVo seckillOrderVo,
                                    Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag){
         log.info(DateUtil.now() +"接收到秒杀订单："+seckillOrderVo);
+        try {
+            channel.basicAck(deliveryTag,false);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
