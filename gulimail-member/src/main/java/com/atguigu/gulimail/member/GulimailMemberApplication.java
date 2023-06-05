@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.member;
 
+import com.atguigu.common.config.SentinelConfig;
 import com.atguigu.common.config.SessionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -19,7 +20,7 @@ import java.net.UnknownHostException;
 @EnableFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication
-@Import(SessionConfig.class)
+@Import({SessionConfig.class, SentinelConfig.class})
 @EnableSwagger2
 @Slf4j
 public class GulimailMemberApplication {

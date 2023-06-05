@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.coupon;
 
+import com.atguigu.common.config.SentinelConfig;
 import com.atguigu.common.config.SessionConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 @EnableRedisHttpSession//开启spring session
-@Import(SessionConfig.class)
+@Import({SessionConfig.class, SentinelConfig.class})
 @EnableDiscoveryClient
 @SpringBootApplication
 public class GulimailCouponApplication {

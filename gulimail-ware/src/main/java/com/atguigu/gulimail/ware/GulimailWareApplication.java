@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.ware;
 
+import com.atguigu.common.config.SentinelConfig;
 import com.atguigu.common.config.SessionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
@@ -18,7 +19,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 @EnableRedisHttpSession//开启spring session
-@Import(SessionConfig.class)
+@Import({SessionConfig.class, SentinelConfig.class})
 @EnableFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication

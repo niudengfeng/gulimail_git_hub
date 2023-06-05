@@ -1,10 +1,13 @@
 package com.gulimail.third;
 
+import com.atguigu.common.config.SentinelConfig;
+import com.atguigu.common.config.SessionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.ConfigurableEnvironment;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
@@ -15,6 +18,7 @@ import java.net.UnknownHostException;
 @SpringBootApplication
 @EnableSwagger2
 @Slf4j
+@Import({SentinelConfig.class})
 public class GulimailThirdApplication {
 
     public static void main(String[] args) throws UnknownHostException {

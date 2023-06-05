@@ -21,8 +21,6 @@ import java.io.IOException;
 @Component
 @RabbitListener(queues = {MqConstants.seckillQueue})
 public class SeckillMqConsumer {
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
 
     /**
      * TODO 创建订单和订单项

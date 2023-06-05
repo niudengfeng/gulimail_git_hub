@@ -1,5 +1,6 @@
 package com.atguigu.gulimail;
 
+import com.atguigu.common.config.SentinelConfig;
 import com.atguigu.common.config.SessionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -21,7 +22,7 @@ import java.net.UnknownHostException;
 @EnableSwagger2
 @EnableFeignClients
 @Slf4j
-@Import({SessionConfig.class})
+@Import({SessionConfig.class, SentinelConfig.class})
 public class GulimailCartApplication {
     public static void main(String[] args) throws UnknownHostException {
         ConfigurableApplicationContext run = SpringApplication.run(GulimailCartApplication.class, args);

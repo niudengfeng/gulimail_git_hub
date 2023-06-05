@@ -1,5 +1,7 @@
 package com.atguigu.gulimail.seckill.service.impl;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.common.constants.MqConstants;
 import com.atguigu.common.utils.RedisConstants;
@@ -187,5 +189,25 @@ public class SeckillServiceImpl implements SeckillService {
             return false;
         }
         return true;
+    }
+
+
+    /**
+     * 可以指定异常回调方法，但是必须在本方法类并且参数名 返回值类型需要一样
+     * @param code
+     * @return
+     */
+    @SentinelResource(value = "normalResources",blockHandler = "normalResourceHandler")
+    public String normalResource(String code){
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return code + "===>normal";
+    }
+
+    public String normalResourceHandler(String code, BlockException exception){
+        return code + "===>error";
     }
 }

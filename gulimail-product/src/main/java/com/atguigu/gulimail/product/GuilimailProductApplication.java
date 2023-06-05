@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.product;
 
+import com.atguigu.common.config.SentinelConfig;
 import com.atguigu.common.config.SessionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
@@ -96,7 +97,7 @@ import java.net.UnknownHostException;
 @EnableFeignClients
 @MapperScan("com.atguigu.gulimail.product.dao")
 @EnableSwagger2
-@Import(SessionConfig.class)
+@Import({SessionConfig.class, SentinelConfig.class})
 @Slf4j
 public class GuilimailProductApplication {
 

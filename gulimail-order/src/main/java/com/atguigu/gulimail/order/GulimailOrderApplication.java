@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.order;
 
+import com.atguigu.common.config.SentinelConfig;
 import com.atguigu.common.config.SessionConfig;
 import com.atguigu.gulimail.order.entity.Stu;
 import com.rabbitmq.client.Channel;
@@ -159,7 +160,7 @@ import java.net.UnknownHostException;
  *   7.每一个小事务加上@Transactional即可
  */
 @EnableRedisHttpSession//开启spring session
-@Import(SessionConfig.class)
+@Import({SessionConfig.class, SentinelConfig.class})
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableRabbit

@@ -1,5 +1,6 @@
 package com.atguigu.gulimail.search;
 
+import com.atguigu.common.config.SentinelConfig;
 import com.atguigu.common.config.SessionConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -21,7 +22,7 @@ import java.net.UnknownHostException;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableSwagger2
 @EnableFeignClients
-@Import(SessionConfig.class)
+@Import({SessionConfig.class, SentinelConfig.class})
 @Slf4j
 public class SearchApplication {
 

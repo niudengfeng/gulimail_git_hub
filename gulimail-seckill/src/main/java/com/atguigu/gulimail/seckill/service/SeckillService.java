@@ -11,4 +11,6 @@ public interface SeckillService {
     public SeckillSkuRelationRedisTo getSkuInfoBySkuId(Long skuId);
 
     String kill(String skuIdPromotionSessionId, String token, String count);
+
+    public String normalResource(String code);
 }
